@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>讚美之泉歌詞搜索工具</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "微軟正黑體", Arial, sans-serif;
+    }
+
+    body {
+      background-color: #F7FFF7;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    .nav {
+      background-color: #0032a8;
+      color: white;
+      width: 100%;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: center;
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav > div {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title {
+      font-size: 1.6em;
+      font-weight: bold;
+      color: white;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-links > a {
+      margin-left: 20px;
+      color: white;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .nav-links > a:hover {
+      color: #FFD700;
+    }
+
+    .search-container {
+      background-color: white;
+      width: 100%;
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-form label {
+      font-weight: bold;
+      font-size: 1.1em;
+      color: #333;
+      min-width: 120px;
+    }
+
+    .search-form input {
+      flex: 1;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+      transition: border-color 0.3s;
+    }
+
+    .search-form input:focus {
+      outline: none;
+      border-color: #0032a8;
+      box-shadow: 0 0 0 2px rgba(0, 50, 168, 0.2);
+    }
+
+    .search-options {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .search-form button {
+      background-color: #0032a8;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+
+    .search-form button:hover {
+      background-color: #002180;
+    }
+
+    .pinyin-button {
+      background-color: #4CAF50 !important;
+    }
+    
+    .pinyin-button:hover {
+      background-color: #3e8e41 !important;
+    }
+
+    .results-title {
+      background-color: #0032a8;
+      color: white;
+      padding: 12px 20px;
+      margin: 20px auto 0;
+      max-width: 1200px;
+      border-radius: 8px 8px 0 0;
+      font-size: 1.3em;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .result-container {
+      background-color: white;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .result-section {
+      margin-bottom: 25px;
+    }
+
+    .result-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .result-heading {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #0032a8;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .result-content {
+      line-height: 1.8;
+      white-space: pre-line;
+      color: #333;
+    }
+
+    .pinyin-line {
+      color: #777;
+      font-size: 0.95em;
+      margin-bottom: 10px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      font-size: 1.2em;
+      color: #0032a8;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(0, 50, 168, 0.3);
+      border-radius: 50%;
+      border-top-color: #0032a8;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      color: #D32F2F;
+      background-color: #FFEBEE;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .highlight {
+      background-color: #FFFF99;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 768px) {
+      .input-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .input-group input {
+        width: 100%;
+      }
+      
+      .search-options {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div>
+      <h1 class="title">批批踢的福音</h1>
+      <div class="nav-links">
+        <a href="javascript:void(0)" id="aboutLink">關於工具</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-container">
+    <div class="search-form">
+      <div class="input-group">
+        <label for="song-name">歌曲名稱：</label>
+        <input type="text" id="song-name" placeholder="請輸入歌曲中文名稱或關鍵字（例如：讓讚美飛揚、生命）">
+      </div>
+    
+      <div class="search-options">
+        <button type="button" id="searchLyrics">搜尋歌詞</button>
+        <button type="button" id="searchPinyin" class="pinyin-button">搜尋拼音</button>
+      </div>
+    
+      <div class="error-message" id="errorMessage"></div>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div> 資料載入中，請稍候...
+  </div>
+
+  <div class="results-title" style="display: none;" id="resultsTitle">
+    搜尋結果
+  </div>
+
+  <div class="result-container" style="display: none;" id="resultContainer">
+    <!-- 結果內容將在這裡動態生成 -->
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      // 全域變數
+      let songsDatabase = []; // 儲存整理好的歌曲資料
+      let isDataLoaded = false;
+
+      // 載入並預處理資料
+      function loadData() {
+        if (isDataLoaded) {
+          return $.Deferred().resolve();
+        }
+
+        $('#loading').show();
+
+        return $.when(
+          $.get('https://raw.githubusercontent.com/YUNAN-B/propresentoool/refs/heads/main/name_database'),
+          $.get('https://raw.githubusercontent.com/YUNAN-B/propresentoool/refs/heads/main/chdatabase'),
+          $.get('https://raw.githubusercontent.com/YUNAN-B/propresentoool/refs/heads/main/endatabase'),
+          $.get('https://raw.githubusercontent.com/YUNAN-B/propresentoool/refs/heads/main/ppt_databace') // 載入 ppt_database
+        ).done(function(nameData, chData, enData, pptData) {
+          const nameDatabase = nameData[0].split('\n');
+          const rawChDatabase = chData[0];
+          const rawEnDatabase = enData[0];
+          const pptDatabase = pptData[0].split('\n'); // 假設 ppt_database 是以 '\n' 分隔的行
+
+          // 解析 name_database，建立中文名到英文名的映射
+          const nameMap = parseNameDatabase(nameDatabase);
+
+          // 解析 ppt_database，建立中文名到 PowerPoint 連結的映射
+          const pptMap = parsePptDatabase(pptDatabase);
+
+          // 處理中文歌詞資料
+          const chSongs = processLyrics(rawChDatabase, 'ch');
+
+          // 處理英文歌詞資料
+          const enSongs = processLyrics(rawEnDatabase, 'en');
+
+          // 合併中英文歌曲資訊及 PowerPoint 連結
+          songsDatabase = chSongs.map(chSong => {
+            const enTitle = nameMap[chSong.title] || 'N/A';
+            const enSong = enSongs.find(song => song.title === enTitle) || {};
+            const pptLink = pptMap[chSong.title] || 'N/A';
+            return {
+              title: chSong.title,        // 中文名
+              enTitle: enTitle,          // 英文名
+              lyrics: chSong.lyrics,     // 中文歌詞
+              enLyrics: enSong.lyrics || '暫無英文歌詞', // 英文歌詞
+              pptLink: pptLink           // PowerPoint 連結
+            };
+          });
+
+          isDataLoaded = true;
+          $('#loading').hide();
+        }).fail(function() {
+          showError('資料載入失敗，請檢查網絡連接或稍後再試');
+          $('#loading').hide();
+        });
+      }
+
+      // 解析 name_database，返回中文名到英文名的映射
+      function parseNameDatabase(data) {
+        const nameMap = {};
+        data.forEach(row => {
+          const columns = row.split('</td><td>');
+          if (columns.length >= 2) {
+            const chName = columns[0].replace(/<\/?td>/g, "").trim();
+            const enName = columns[1].trim();
+            nameMap[chName] = enName;
+          }
+        });
+        return nameMap;
+      }
+
+      // 解析 ppt_database，返回中文名到 PowerPoint 連結的映射
+      function parsePptDatabase(data) {
+        const pptMap = {};
+        data.forEach(row => {
+          const columns = row.split('</td><td>');
+          if (columns.length >= 4) {
+            const chName = columns[0].replace(/<\/?td>/g, "").trim();
+            const pptLinkMatch = columns[3].match(/href="(.+?)"/);
+            if (pptLinkMatch) {
+              pptMap[chName] = pptLinkMatch[1]; // 提取 Tradbi 連結
+            }
+          }
+        });
+        return pptMap;
+      }
+
+      // 處理歌詞資料的函數
+      function processLyrics(data, lang) {
+        let songs = [];
+        let rows = data.split(/<tr data-row_id=".+?" class="ninja_table_row_.+?">/);
+
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          const columns = row.split('</td><td>');
+
+          if (columns.length >= 7) {
+            let songInfo = {
+              title: columns[0].replace(/<\/?td>/g, "").trim(), // 標題（中文或英文）
+              lyrics: columns[6].replace(/<\/?t.>/g, "").trim() // 歌詞（假設在第7欄）
+            };
+            songs.push(songInfo);
+          }
+        }
+
+        return songs;
+      }
+
+      // 搜尋歌詞功能
+      $('#searchLyrics').click(function() {
+        const songName = $('#song-name').val().trim();
+        if (!songName) {
+          showError('請輸入歌曲名稱或關鍵字');
+          return;
+        }
+
+        $('#loading').show();
+        loadData().done(function() {
+          const results = songsDatabase.filter(song =>
+            song.title.includes(songName) ||
+            song.enTitle.includes(songName) ||
+            song.lyrics.includes(songName) ||
+            song.enLyrics.includes(songName)
+          );
+
+          if (results.length === 0) {
+            showError('找不到包含該關鍵字的歌曲');
+            $('#loading').hide();
+            return;
+          }
+
+          displayLyricsResults(results, songName);
+          $('#loading').hide();
+        });
+      });
+
+      // 搜尋拼音功能（尚未實現）
+      $('#searchPinyin').click(function() {
+        showError('拼音功能尚未實現，敬請期待！');
+      });
+
+      // 關於工具
+      $('#aboutLink').click(function() {
+        alert('這是一個讚美之泉歌詞搜索工具，可以查詢歌詞和拼音。\n\n數據來源：sop.org\n\n使用方法：輸入歌曲名稱、歌詞片段或關鍵字進行搜尋');
+      });
+
+      // 顯示歌詞搜尋結果
+      function displayLyricsResults(results, keyword) {
+        const container = $('#resultContainer');
+        container.empty();
+
+        results.forEach(result => {
+          const highlightedTitle = highlightText(result.title, keyword);
+          const highlightedEnTitle = highlightText(result.enTitle, keyword);
+          const highlightedLyrics = highlightText(result.lyrics, keyword);
+          const highlightedEnLyrics = highlightText(result.enLyrics, keyword);
+          const pptLink = result.pptLink !== 'N/A' 
+            ? `<a href="${result.pptLink}" target="_blank">下載繁體版PowerPoint</a>` 
+            : '無下載連結';
+
+          container.append(`
+            <div class="result-section">
+              <div class="result-heading">歌曲資訊</div>
+              <div class="result-content">
+                <strong>中文名稱：</strong>${highlightedTitle}<br>
+                <strong>英文名稱：</strong>${highlightedEnTitle}<br>
+                <strong>下載：</strong>${pptLink}
+              </div>
+            </div>
+            <div class="result-section">
+              <div class="result-heading">中文歌詞</div>
+              <div class="result-content">${highlightedLyrics}</div>
+            </div>
+            <div class="result-section">
+              <div class="result-heading">英文歌詞</div>
+              <div class="result-content">${highlightedEnLyrics}</div>
+            </div>
+          `);
+        });
+
+        $('#resultsTitle').show();
+        container.show();
+      }
+
+      // 顯示錯誤訊息
+      function showError(message) {
+        $('#errorMessage').text(message).show();
+        setTimeout(() => $('#errorMessage').hide(), 3000); // 3秒後自動隱藏
+      }
+
+      // 高亮顯示搜索關鍵字
+      function highlightText(text, keyword) {
+        if (!keyword) return text;
+        const regex = new RegExp('(' + keyword + ')', 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
+      }
+
+      // 讓回車鍵觸發搜尋
+      $('#song-name').keypress(function(e) {
+        if (e.which === 13) {
+          $('#searchLyrics').click();
+        }
+      });
+
+      // 預載資料
+      loadData();
+    });
+  </script>
+</body>
+</html>
