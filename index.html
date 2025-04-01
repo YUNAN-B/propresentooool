@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>批批踢的福音</title>
+  <title>標題不知道要寫甚麼餒</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <style>
     * {
@@ -68,22 +68,29 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-top: 20px;
     }
 
     .tab-link {
-      padding: 10px 30px;
+      padding: 12px 30px;
       text-decoration: none;
       color: #333;
       background-color: #f0f0f0;
-      border-radius: 4px 4px 0 0;
+      border-radius: 10px 10px 0 0;
       margin-right: 5px;
       cursor: pointer;
     }
 
     .tab-link.active {
-      background-color: #0032a8;
       color: white;
+      background-color: #0032a8;
+    }
+    .tab-link.active.lyrics-tab {
+      background-color: #0032a8; /* 藍色，歌詞查詢 */
+    }
+    
+    .tab-link.active.pinyin-tab {
+      background-color: #4CAF50; /* 綠色，拼音查詢 */
     }
 
     .tab-content {
@@ -94,7 +101,7 @@
       background-color: white;
       width: 100%;
       max-width: 1200px;
-      margin: 30px auto;
+      margin: 0px auto;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -342,7 +349,26 @@
       </div>
     </div>
   </div>
-
+<!-- 關於工具 Modal -->
+<div id="aboutModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close">×</span>
+    <h2>關於工具</h2>
+    <div class="modal-body">
+      <h3>批批踢的福音 搜索器</h3>
+      <p>某天我再做歌的時候發現他們的官網不太好用，要跳來跳去找中文英文，還要去下載ppt很麻煩，所以就想說自己做一個方便一點的網頁。來工作的也辛苦了~</p>
+      <h3>歷史版本</h3>
+      <ul class="modal-body-h">
+        <li>1.1 - 修正錯誤、增加關鍵字搜索</li>
+        <li>1.2 - 增加"關於工具"描述、下載繁體ppt功能</li>
+        <li>1.3 - 增加拼音查詢功能</li>
+        <li>1.4 - 優化拼音查詢功能</li>
+      </ul>
+      <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" style="font-size: 2em;color: blue;">其他資訊</a>
+      <p></p>
+    </div>
+  </div>
+</div>
   <!-- 查詢拼音內容 -->
   <div id="pinyinTab" class="tab-content" style="display: none;">
     <div class="search-container">
@@ -449,7 +475,22 @@
         }
         return songs;
       }
+// 顯示 Modal
+$('#aboutLink').click(function() {
+  $('#aboutModal').show();
+});
 
+// 關閉 Modal
+$('.close').click(function() {
+  $('#aboutModal').hide();
+});
+
+// 點擊 Modal 外部關閉
+$(window).click(function(event) {
+  if (event.target.id === 'aboutModal') {
+    $('#aboutModal').hide();
+  }
+});
       $('#searchLyrics').click(function() {
         const songName = $('#song-name').val().trim();
         if (!songName) {
@@ -616,11 +657,19 @@
       }
 
       $('.tab-link').click(function() {
-        $('.tab-link').removeClass('active');
+        $('.tab-link').removeClass('active lyrics-tab pinyin-tab');
         $(this).addClass('active');
+        const tabType = $(this).data('tab');
+        if (tabType === 'lyrics') {
+          $(this).addClass('lyrics-tab');
+        } else if (tabType === 'pinyin') {
+          $(this).addClass('pinyin-tab');
+        }
         $('.tab-content').hide();
-        $('#' + $(this).data('tab') + 'Tab').show();
+        const tabId = tabType + 'Tab';
+        $('#' + tabId).show();
       });
+
 
       loadData();
     });
