@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>標題不知道要寫甚麼餒</title>
+  <title>標題要叫什麼好嘞?</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <style>
     * {
@@ -308,10 +308,16 @@
     }
    
     .modal-body {
-      margin-top: 20px;
+      margin-top: 10px;
       margin-bottom: 10px;
     }
-   
+    .modal-body>h3 {
+      margin-top: 10px;
+    }
+    .modal-body>h3>a {
+      color:blue;
+      margin-top: 10px;
+    }
     .modal-body-h {
       margin: 10px 0px;
       padding-left: 20px;
@@ -357,6 +363,9 @@
     <div class="modal-body">
       <h3>批批踢的福音 搜索器</h3>
       <p>某天我再做歌的時候發現他們的官網不太好用，要跳來跳去找中文英文，還要去下載ppt很麻煩，所以就想說自己做一個方便一點的網頁。來工作的也辛苦了~</p>
+      <h3>資料來源</h3>
+        <a href="https://crptransfer.moe.gov.tw/index.jsp" target="_blank" style="color:blue;">教育部拼音查詢系統</a><br/>
+        <a href="https://sop.org/"target="_blank" style="color: blue;">讚美之泉官方網站</a>
       <h3>歷史版本</h3>
       <ul class="modal-body-h">
         <li>1.1 - 修正錯誤、增加關鍵字搜索</li>
@@ -364,7 +373,7 @@
         <li>1.3 - 增加拼音查詢功能</li>
         <li>1.4 - 優化拼音查詢功能</li>
       </ul>
-      <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" style="font-size: 2em;color: blue;">其他資訊</a>
+      <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" style="font-size: 1.8em;color: blue;">其他資訊</a>
       <p></p>
     </div>
   </div>
@@ -516,7 +525,7 @@ $(window).click(function(event) {
       $('#searchPinyin').click(function() {
         const lyrics = $('#lyrics-input').val().trim();
         if (!lyrics) {
-          $('#errorMessagePinyin').text('請輸入歌詞').show();
+          $('#errorMessagePinyin').text('都不輸入是想怎樣(# `皿´)').show();
           return;
         }
         $('#loading').show();
@@ -636,19 +645,25 @@ $(window).click(function(event) {
               <div class="result-heading">拼音結果</div>
               <div class="result-content">${linesHtml}</div>
             </div>
+            
           `);
+          $('#pinyinResultsTitle, #pinyinResultContainer').show();
+          $('#errorMessagePinyin').hide();
         } else {
           const errorMessages = result.lines.map((line, index) => {
             return `第 ${index + 1} 行：${line.error}`;
           }).join('<br>');
+          $('#errorMessagePinyin').text('小氣!好歹給個兩個字嘛').show();
+          $('#pinyinResultsTitle, #pinyinResultContainer').hide();
+          /*
           container.append(`
             <div class="result-section">
-              <div class="result-heading">拼音提取失敗</div>
+              <div class="result-heading">一次輸入多一點嘛</div>
               <div class="result-content" style="color: red;">${errorMessages}</div>
             </div>
-          `);
+          `);*/
         }
-        $('#pinyinResultsTitle, #pinyinResultContainer').show();
+        
       }
 
       function highlightText(text, keyword) {
