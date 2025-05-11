@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>標題要叫什麼好嘞?</title>
+  <title>批批踢的福音</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <style>
     * {
@@ -63,7 +63,6 @@
       color: #FFD700;
     }
 
-    /* 書籤樣式 */
     .tabs {
       display: flex;
       align-items: center;
@@ -83,14 +82,18 @@
 
     .tab-link.active {
       color: white;
-      background-color: #0032a8;
     }
+
     .tab-link.active.lyrics-tab {
-      background-color: #0032a8; /* 藍色，歌詞查詢 */
+      background-color: #0032a8;
     }
     
     .tab-link.active.pinyin-tab {
-      background-color: #4CAF50; /* 綠色，拼音查詢 */
+      background-color: #4CAF50;
+    }
+
+    .tab-link.active.ppt-recognition-tab {
+      background-color: #FF5722;
     }
 
     .tab-content {
@@ -145,6 +148,8 @@
       display: flex;
       gap: 15px;
       margin-top: 10px;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
     .search-form button {
@@ -169,6 +174,14 @@
    
     .pinyin-button:hover {
       background-color: #3e8e41 !important;
+    }
+
+    .ppt-button {
+      background-color: #FF5722 !important;
+    }
+
+    .ppt-button:hover {
+      background-color: #e64a19 !important;
     }
 
     .results-title {
@@ -211,7 +224,7 @@
 
     .result-content {
       line-height: 25px;
-      white-space:inherit;
+      white-space: inherit;
       color: #333;
     }
 
@@ -311,11 +324,11 @@
       margin-top: 10px;
       margin-bottom: 10px;
     }
-    .modal-body>h3 {
+    .modal-body > h3 {
       margin-top: 10px;
     }
-    .modal-body>h3>a {
-      color:blue;
+    .modal-body > h3 > a {
+      color: blue;
       margin-top: 10px;
     }
     .modal-body-h {
@@ -334,10 +347,10 @@
     </div>
   </div>
 
-  <!-- 書籤區域 -->
   <div class="tabs">
-    <a href="javascript:void(0)" class="tab-link active" data-tab="lyrics">歌詞查詢</a>
-    <a href="javascript:void(0)" class="tab-link" data-tab="pinyin">查詢拼音</a>
+    <a href="javascript:void(0)" class="tab-link active lyrics-tab" data-tab="lyrics">歌詞查詢</a>
+    <a href="javascript:void(0)" class="tab-link pinyin-tab" data-tab="pinyin">查詢拼音</a>
+    <a href="javascript:void(0)" class="tab-link ppt-recognition-tab" data-tab="ppt-recognition">歌詞辨識</a>
   </div>
 
   <!-- 歌詞查詢內容 -->
@@ -351,61 +364,127 @@
         <div class="search-options">
           <button type="button" id="searchLyrics">搜尋歌詞</button>
         </div>
-        <div class="error-message" id="errorMessage"></div>
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+      </div>
+    </div>
+    <div class="results-title" style="display: none;" id="resultsTitle">搜尋結果</div>
+    <div class="result-container" style="display: none;" id="resultContainer"></div>
+  </div>
+
+  <!-- 關於工具 Modal -->
+  <div id="aboutModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close">×</span>
+      <h2>關於工具</h2>
+      <div class="modal-body">
+        <h3>批批踢的福音 搜索器</h3>
+        <p>某天我再做歌的時候發現他們的官網不太好用，要跳來跳去找中文英文，還要去下載ppt很麻煩，所以就想說自己做一個方便一點的網頁。來工作的也辛苦了~</p>
+        <h3>資料來源</h3>
+        <a href="https://crptransfer.moe.edu.tw/index.jsp" target="_blank" style="color:blue;">教育部拼音查詢系統</a><br/>
+        <a href="https://sop.org/" target="_blank" style="color: blue;">讚美之泉官方網站</a>
+        <h3>歷史版本</h3>
+        <ul class="modal-body-h">
+          <li>1.1 - 修正錯誤、增加關鍵字搜索</li>
+          <li>1.2 - 增加"關於工具"描述、下載繁體ppt功能</li>
+          <li>1.3 - 增加拼音查詢功能</li>
+          <li>1.4 - 優化拼音查詢功能</li>
+          <li>1.5 - 增加歌詞辨識功能</li>
+        </ul>
+        <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" target="_blank" style="font-size: 1.1em;color: blue;">了解更多</a>
       </div>
     </div>
   </div>
-<!-- 關於工具 Modal -->
-<div id="aboutModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <span class="close">×</span>
-    <h2>關於工具</h2>
-    <div class="modal-body">
-      <h3>批批踢的福音 搜索器</h3>
-      <p>某天我再做歌的時候發現他們的官網不太好用，要跳來跳去找中文英文，還要去下載ppt很麻煩，所以就想說自己做一個方便一點的網頁。來工作的也辛苦了~</p>
-      <h3>資料來源</h3>
-        <a href="https://crptransfer.moe.gov.tw/index.jsp" target="_blank" style="color:blue;">教育部拼音查詢系統</a><br/>
-        <a href="https://sop.org/"target="_blank" style="color: blue;">讚美之泉官方網站</a>
-      <h3>歷史版本</h3>
-      <ul class="modal-body-h">
-        <li>1.1 - 修正錯誤、增加關鍵字搜索</li>
-        <li>1.2 - 增加"關於工具"描述、下載繁體ppt功能</li>
-        <li>1.3 - 增加拼音查詢功能</li>
-        <li>1.4 - 優化拼音查詢功能</li>
-      </ul>
-      <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" style="font-size: 1.8em;color: blue;">其他資訊</a>
-      <p></p>
-    </div>
-  </div>
-</div>
+
   <!-- 查詢拼音內容 -->
   <div id="pinyinTab" class="tab-content" style="display: none;">
     <div class="search-container">
       <div class="search-form">
         <div class="input-group">
-          <label for="lyrics-input">輸入歌詞：</label>
-          <textarea id="lyrics-input" rows="5" placeholder="請輸入中文歌詞（可多行）"></textarea>
+          <label for="lyrics-input">輸入文字：</label>
+          <textarea id="lyrics-input" rows="5" placeholder="請輸入中文文字（可多行）"></textarea>
         </div>
         <div class="search-options">
           <label><input type="checkbox" id="showOriginalText"> 在拼音上方顯示原始文字</label>
-          <button type="button" id="searchPinyin" class="pinyin-button">搜尋拼音</button>
+          <label><input type="checkbox" id="enableMiConversion"> 啟用mi轉換</label>
+          <label><input type="checkbox" id="enableAutoNewline"> 啟用自動換行</label>
+          <label><input type="checkbox" id="enableSimplifiedConversion"> 啟用簡體轉換</label>
+          <button type="button" id="convertPinyinButton" class="pinyin-button">轉換拼音</button>
         </div>
-        <div class="error-message" id="errorMessagePinyin"></div>
+        <div class="error-message" id="errorMessagePinyin" style="display: none;"></div>
       </div>
     </div>
-    <div class="results-title" style="display: none;" id="pinyinResultsTitle">拼音結果</div>
+    <div class="results-title" style="display: none;" id="pinyinResultsTitle">拼音結果 (不含聲調)</div>
     <div class="result-container" style="display: none;" id="pinyinResultContainer"></div>
   </div>
 
-  <div class="loading" id="loading">資料載入中，請稍候...</div>
-  <div class="results-title" style="display: none;" id="resultsTitle">搜尋結果</div>
-  <div class="result-container" style="display: none;" id="resultContainer"></div>
+  <!-- 歌詞辨識內容 -->
+  <div id="pptRecognitionTab" class="tab-content" style="display: none;">
+    <div class="search-container">
+      <div class="search-form">
+        <div class="input-group">
+          <label for="ppt-upload">上傳 PowerPoint：</label>
+          <input type="file" id="ppt-upload" accept=".pptx" placeholder="選擇 PowerPoint 檔案">
+        </div>
+        <div class="search-options">
+          <button type="button" id="uploadPpt" class="ppt-button">辨識歌詞</button>
+        </div>
+        <div class="error-message" id="errorMessagePpt" style="display: none;"></div>
+      </div>
+    </div>
+    <div class="results-title" style="display: none;" id="pptResultsTitle">辨識結果</div>
+    <div class="result-container" style="display: none;" id="pptResultContainer"></div>
+  </div>
+
+  <div class="loading" id="loading" style="display: none;">
+    <span class="spinner"></span>資料載入中，請稍候...
+  </div>
+
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/sxei/pinyinjs@master/dict/pinyin_dict_notone.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/sxei/pinyinjs@master/pinyinUtil.js"></script>
 
   <script>
     $(document).ready(function() {
       let songsDatabase = [];
       let isDataLoaded = false;
+      let originalInput = '';
+      let conversionMap = {}; // 儲存從 GitHub 導入的轉換映射 (簡體 -> 繁體)
 
+      // 顯示 Modal
+      $('#aboutLink').click(function() {
+        $('#aboutModal').show();
+      });
+
+      // 關閉 Modal
+      $('.close').click(function() {
+        $('#aboutModal').hide();
+      });
+
+      // 點擊 Modal 外部關閉
+      $(window).click(function(event) {
+        if (event.target.id === 'aboutModal') {
+          $('#aboutModal').hide();
+        }
+      });
+
+      function loadConversionData() {
+  $('#loading').show();
+  return $.get('https://raw.githubusercontent.com/YUNAN-B/propresentoool/refs/heads/main/tw2cn_database')
+    .done(function(data) {
+      try {
+        conversionMap = JSON.parse(data); // 手動解析 JSON
+        $('#loading').hide();
+      } catch (e) {
+        $('#errorMessagePinyin').text('JSON 解析失敗：' + e.message).show();
+        $('#loading').hide();
+      }
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      $('#errorMessagePinyin').text('無法載入轉換資料：' + textStatus + ' - ' + errorThrown).show();
+      $('#loading').hide();
+    });
+}
+
+      // 載入資料
       function loadData() {
         if (isDataLoaded) return $.Deferred().resolve();
         $('#loading').show();
@@ -417,7 +496,7 @@
         ).done(function(nameData, chData, enData, pptData) {
           const nameDatabase = nameData[0].split('\n');
           const chSongs = processLyrics(chData[0], 'ch');
-          const enSongs = processLyrics(enData[0], 'en');
+          const enSongs = enData[0] ? processLyrics(enData[0], 'en') : [];
           const pptDatabase = pptData[0].split('\n');
           
           const nameMap = parseNameDatabase(nameDatabase);
@@ -425,13 +504,13 @@
 
           songsDatabase = chSongs.map(chSong => {
             const enTitle = nameMap[chSong.title] || 'N/A';
-            const enSong = enSongs.find(song => song.title === enTitle) || {};
+            const enSong = enSongs.find(song => song.title === enTitle) || { title: enTitle, lyrics: '暫無英文歌詞' };
             const pptLink = pptMap[chSong.title] || 'N/A';
             return {
               title: chSong.title,
               enTitle: enTitle,
               lyrics: chSong.lyrics,
-              enLyrics: enSong.lyrics || '暫無英文歌詞',
+              enLyrics: enSong.lyrics,
               pptLink: pptLink
             };
           });
@@ -444,12 +523,13 @@
         });
       }
 
+      // 解析資料庫函數
       function parseNameDatabase(data) {
         const nameMap = {};
         data.forEach(row => {
           const columns = row.split('</td><td>');
           if (columns.length >= 2) {
-            nameMap[columns[0].replace(/<\/?td>/g, "").trim()] = columns[1].trim();
+            nameMap[columns[0].replace(/<\/?t[dh]>/g, "").trim()] = columns[1].trim();
           }
         });
         return nameMap;
@@ -460,7 +540,7 @@
         data.forEach(row => {
           const columns = row.split('</td><td>');
           if (columns.length >= 4) {
-            const chName = columns[0].replace(/<\/?td>/g, "").trim();
+            const chName = columns[0].replace(/<\/?t[dh]>/g, "").trim();
             const pptLinkMatch = columns[3].match(/href="(.+?)"/);
             if (pptLinkMatch) {
               pptMap[chName] = pptLinkMatch[1];
@@ -472,48 +552,37 @@
 
       function processLyrics(data, lang) {
         let songs = [];
-        let rows = data.split(/<tr data-row_id=".+?" class="ninja_table_row_.+?">/);
-        for (let i = 1; i < rows.length; i++) {
+        let rows = data.split(/<tr\s+data-row_id="[^"]+"\s+class="ninja_table_row_[^"]+">\s*/).filter(row => row.trim() !== '');
+        for (let i = 0; i < rows.length; i++) {
           const columns = rows[i].split('</td><td>');
           if (columns.length >= 7) {
             songs.push({
-              title: columns[0].replace(/<\/?td>/g, "").trim(),
-              lyrics: columns[6].replace(/<\/?t.>/g, "").trim()
+              title: columns[0].replace(/<\/?t[dh].*?>/g, "").trim(),
+              lyrics: columns[6].replace(/<\/?t[dh].*?>/g, "").trim()
             });
           }
         }
         return songs;
       }
-// 顯示 Modal
-$('#aboutLink').click(function() {
-  $('#aboutModal').show();
-});
 
-// 關閉 Modal
-$('.close').click(function() {
-  $('#aboutModal').hide();
-});
-
-// 點擊 Modal 外部關閉
-$(window).click(function(event) {
-  if (event.target.id === 'aboutModal') {
-    $('#aboutModal').hide();
-  }
-});
+      // 歌詞搜尋
       $('#searchLyrics').click(function() {
         const songName = $('#song-name').val().trim();
+        $('#errorMessage').hide();
+        $('#resultsTitle, #resultContainer').hide().empty();
+
         if (!songName) {
           $('#errorMessage').text('請輸入歌曲名稱或關鍵字').show();
           return;
         }
         $('#loading').show();
         loadData().done(function() {
-          const results = songsDatabase.filter(song => 
+          const results = songsDatabase.filter(song =>
             song.title.includes(songName) || song.enTitle.includes(songName) ||
             song.lyrics.includes(songName) || song.enLyrics.includes(songName)
           );
           if (results.length === 0) {
-            $('#errorMessage').text('找不到相關歌曲 歌曲').show();
+            $('#errorMessage').text('找不到相關歌曲').show();
             $('#loading').hide();
             return;
           }
@@ -522,83 +591,7 @@ $(window).click(function(event) {
         });
       });
 
-      $('#searchPinyin').click(function() {
-        const lyrics = $('#lyrics-input').val().trim();
-        if (!lyrics) {
-          $('#errorMessagePinyin').text('都不輸入是想怎樣(# `皿´)').show();
-          return;
-        }
-        $('#loading').show();
-        const lines = lyrics.split('\n').filter(line => line.trim() !== '');
-        const promises = lines.map(line => {
-          const trimmedLine = line.trim();
-          const chunks = chunkText(trimmedLine, 20);
-          return Promise.all(chunks.map(chunk => getPinyin(chunk)))
-            .then(results => {
-              const pinyin = results.reduce((acc, result) => {
-                if (result.success) {
-                  return (acc || '') + (acc ? ' ' : '') + result.pinyin;
-                } else {
-                  throw new Error(result.error);
-                }
-              }, '');
-              return { success: true, text: pinyin, original: trimmedLine };
-            })
-            .catch(e => ({ success: false, text: trimmedLine, original: trimmedLine, error: e.message }));
-        });
-
-        Promise.all(promises)
-          .then(results => {
-            const combinedResult = {
-              success: true,
-              lines: results
-            };
-            if (results.every(result => !result.success)) {
-              combinedResult.success = false;
-            }
-            displayPinyinResults(combinedResult);
-            $('#loading').hide();
-          })
-          .catch(() => {
-            $('#errorMessagePinyin').text('獲取拼音失敗').show();
-            $('#loading').hide();
-          });
-      });
-
-      function chunkText(text, size) {
-        const chunks = [];
-        for (let i = 0; i < text.length; i += size) {
-          chunks.push(text.slice(i, i + size));
-        }
-        return chunks;
-      }
-
-      function getPinyin(lyrics) {
-        return new Promise((resolve, reject) => {
-          const url = `http://localhost:3000/api/pinyin?lyrics=${encodeURIComponent(lyrics.replace(/祢/g, '你'))}`;
-          $.get(url).done(data => {
-            const soup = $(data);
-            const pinyinTh = soup.find('th:contains("漢語拼音")');
-            if (pinyinTh.length) {
-              const pinyinTd = pinyinTh.next('td');
-              const pinyinSpans = pinyinTd.find('span.long');
-              if (pinyinSpans.length) {
-                const pinyin = pinyinSpans.map((i, el) => $(el).text().trim()).get().join(' ');
-                resolve({ success: true, pinyin: pinyin });
-              } else {
-                const errorMessage = soup.find('td:contains("所查詢的")').text().trim() || '無法提取錯誤訊息';
-                resolve({ success: false, error: errorMessage });
-              }
-            } else {
-              const errorMessage = soup.find('td:contains("所查詢的")').text().trim() || '無法提取錯誤訊息';
-              resolve({ success: false, error: errorMessage });
-            }
-          }).fail(() => {
-            reject('請求失敗');
-          });
-        });
-      }
-
+      // 顯示歌詞搜尋結果
       function displayLyricsResults(results, keyword) {
         const container = $('#resultContainer').empty();
         results.forEach(result => {
@@ -613,79 +606,195 @@ $(window).click(function(event) {
             </div>
             <div class="result-section">
               <div class="result-heading">中文歌詞</div>
-              <div class="result-content">${highlightText(result.lyrics, keyword)}</div>
+              <div class="result-content">${highlightText(result.lyrics.replace(/\n/g, '<br>'), keyword)}</div>
             </div>
             <div class="result-section">
               <div class="result-heading">英文歌詞</div>
-              <div class="result-content">${highlightText(result.enLyrics, keyword)}</div>
+              <div class="result-content">${highlightText(result.enLyrics.replace(/\n/g, '<br>'), keyword)}</div>
             </div>
           `);
         });
         $('#resultsTitle, #resultContainer').show();
       }
 
-      function displayPinyinResults(result) {
-        const container = $('#pinyinResultContainer').empty();
-        const showOriginal = $('#showOriginalText').is(':checked');
-
-        if (result.success) {
-          const linesHtml = result.lines.map(line => {
-            const color = line.success ? 'black' : 'red';
-            if (showOriginal) {
-              return `
-                <div style="color: blue;">${line.original}</div>
-                <div style="color: ${color};">${line.text}</div>
-              `;
-            } else {
-              return `<div style="color: ${color};">${line.text}</div>`;
-            }
-          }).join('');
-          container.append(`
-            <div class="result-section">
-              <div class="result-heading">拼音結果</div>
-              <div class="result-content">${linesHtml}</div>
-            </div>
-            
-          `);
-          $('#pinyinResultsTitle, #pinyinResultContainer').show();
-          $('#errorMessagePinyin').hide();
-        } else {
-          const errorMessages = result.lines.map((line, index) => {
-            return `第 ${index + 1} 行：${line.error}`;
-          }).join('<br>');
-          $('#errorMessagePinyin').text('好像哪裡出錯了欸QQ').show();
-          $('#pinyinResultsTitle, #pinyinResultContainer').hide();
-          /*
-          container.append(`
-            <div class="result-section">
-              <div class="result-heading">一次輸入多一點嘛</div>
-              <div class="result-content" style="color: red;">${errorMessages}</div>
-            </div>
-          `);*/
-        }
-        
-      }
-
+      // 高亮文字
       function highlightText(text, keyword) {
         if (!keyword) return text;
-        return text.replace(new RegExp(`(${keyword})`, 'gi'), '<span class="highlight">$1</span>');
+        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return text.replace(new RegExp(`(${escapedKeyword})`, 'gi'), '<span class="highlight">$1</span>');
       }
 
+      // 繁體轉簡體函數，使用導入的 conversionMap
+      function convertToSimplified(text) {
+        if (Object.keys(conversionMap).length === 0) return text; // 如果資料未載入，返回原文字
+        return text.replace(/[萬與醜專業叢東絲丟兩嚴並喪個爿豐臨]/g, char => {
+          return conversionMap[char] ? Object.keys(conversionMap).find(key => conversionMap[key] === char) : char;
+        });
+      }
+
+      // 拼音轉換
+      $('#convertPinyinButton').click(function() {
+        const inputText = $('#lyrics-input').val().trim();
+        const showOriginal = $('#showOriginalText').is(':checked');
+        const enableMiConversion = $('#enableMiConversion').is(':checked');
+        const enableAutoNewline = $('#enableAutoNewline').is(':checked');
+        const enableSimplifiedConversion = $('#enableSimplifiedConversion').is(':checked');
+        $('#errorMessagePinyin').hide();
+        $('#pinyinResultsTitle, #pinyinResultContainer').hide().empty();
+
+        if (!inputText) {
+          $('#errorMessagePinyin').text('請輸入文字進行轉換').show();
+          return;
+        }
+
+        if (typeof pinyinUtil === 'undefined' || typeof pinyinUtil.getPinyin !== 'function') {
+          $('#errorMessagePinyin').text('拼音轉換函式庫尚未載入。請檢查網路連線或 CDN 連結。').show();
+          return;
+        }
+
+        try {
+          let processedText = inputText;
+          if (enableAutoNewline) {
+            processedText = processedText.replace(/\s+/g, '\n');
+            $('#lyrics-input').val(processedText);
+          } else if (originalInput && !enableAutoNewline) {
+            $('#lyrics-input').val(originalInput);
+          }
+          if (enableSimplifiedConversion && Object.keys(conversionMap).length > 0) {
+            processedText = convertToSimplified(processedText);
+            $('#lyrics-input').val(processedText);
+          } else if (originalInput && !enableSimplifiedConversion) {
+            $('#lyrics-input').val(originalInput);
+          }
+          originalInput = inputText;
+
+          const lines = processedText.split('\n');
+          let pinyinOutputHtml = '';
+
+          lines.forEach(line => {
+            const trimmedLine = line.trim();
+            if (trimmedLine === '') {
+              pinyinOutputHtml += '<br>';
+              return;
+            }
+            let pinyinLine = pinyinUtil.getPinyin(trimmedLine, ' ', false, false);
+            if (enableMiConversion) {
+              pinyinLine = pinyinLine.replace(/\bmi\b/g, match => {
+                return trimmedLine.includes('祢') ? '<span style="color: red;">ni</span>' : match;
+              });
+            }
+            if (showOriginal) {
+              pinyinOutputHtml += `<div style="color: blue;">${trimmedLine}</div>`;
+            }
+            pinyinOutputHtml += `<div>${pinyinLine}</div>`;
+          });
+
+          $('#pinyinResultContainer').html(pinyinOutputHtml);
+          $('#pinyinResultsTitle, #pinyinResultContainer').show();
+        } catch (e) {
+          $('#errorMessagePinyin').text('轉換失敗。錯誤訊息：' + e.message).show();
+        }
+      });
+
+      // 監聽勾選框變化以即時處理自動換行和簡體轉換
+      $('#enableAutoNewline').change(function() {
+        const enableAutoNewline = $(this).is(':checked');
+        let currentText = $('#lyrics-input').val().trim();
+        if (enableAutoNewline && !originalInput) {
+          originalInput = currentText;
+        }
+        if (enableAutoNewline) {
+          currentText = currentText.replace(/\s+/g, '\n');
+          $('#lyrics-input').val(currentText);
+        } else if (originalInput && !enableAutoNewline) {
+          $('#lyrics-input').val(originalInput);
+        }
+      });
+
+      $('#enableSimplifiedConversion').change(function() {
+        const enableSimplifiedConversion = $(this).is(':checked');
+        let currentText = $('#lyrics-input').val().trim();
+        if (enableSimplifiedConversion && !originalInput) {
+          originalInput = currentText;
+          loadConversionData(); // 首次啟用時載入轉換資料
+        }
+        if (enableSimplifiedConversion && Object.keys(conversionMap).length > 0) {
+          currentText = convertToSimplified(currentText);
+          $('#lyrics-input').val(currentText);
+        } else if (originalInput && !enableSimplifiedConversion) {
+          $('#lyrics-input').val(originalInput);
+        }
+      });
+
+      // 上傳 PowerPoint 並辨識歌詞
+      $('#uploadPpt').click(function() {
+        const fileInput = $('#ppt-upload')[0];
+        $('#errorMessagePpt').hide();
+        $('#pptResultsTitle, #pptResultContainer').hide().empty();
+
+        if (!fileInput.files.length) {
+          $('#errorMessagePpt').text('請選擇 PowerPoint 檔案').show();
+          return;
+        }
+        const formData = new FormData();
+        formData.append('ppt', fileInput.files[0]);
+        $('#loading').show();
+
+        $.ajax({
+          url: 'http://localhost:3000/upload-ppt',
+          type: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function(data) {
+            $('#loading').hide();
+            if (data && data.lyrics) {
+              $('#pptResultContainer').html(`
+                <div class="result-section">
+                  <div class="result-heading">辨識的歌詞</div>
+                  <div class="result-content">${data.lyrics.replace(/\n/g, '<br>')}</div>
+                </div>
+              `);
+              $('#pptResultsTitle, #pptResultContainer').show();
+            } else {
+              $('#errorMessagePpt').text('無法辨識歌詞，請確認檔案內容或後端返回格式。').show();
+            }
+          },
+          error: function() {
+            $('#loading').hide();
+            $('#errorMessagePpt').text('上傳或辨識失敗，請確認後端服務是否運行。').show();
+          }
+        });
+      });
+
+      // 頁籤切換
       $('.tab-link').click(function() {
-        $('.tab-link').removeClass('active lyrics-tab pinyin-tab');
+        $('.tab-link').removeClass('active lyrics-tab pinyin-tab ppt-recognition-tab');
         $(this).addClass('active');
         const tabType = $(this).data('tab');
         if (tabType === 'lyrics') {
           $(this).addClass('lyrics-tab');
         } else if (tabType === 'pinyin') {
           $(this).addClass('pinyin-tab');
+        } else if (tabType === 'ppt-recognition') {
+          $(this).addClass('ppt-recognition-tab');
         }
         $('.tab-content').hide();
+        $('.error-message').hide();
+        $('#loading').hide();
+        $('#resultsTitle, #resultContainer').hide().empty();
+        $('#pinyinResultsTitle, #pinyinResultContainer').hide().empty();
+        $('#pptResultsTitle, #pptResultContainer').hide().empty();
+
         const tabId = tabType + 'Tab';
         $('#' + tabId).show();
+
+        if (tabType === 'lyrics' && !isDataLoaded) {
+          loadData();
+        }
       });
 
-
+      // 頁面載入時載入資料
       loadData();
     });
   </script>
