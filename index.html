@@ -63,6 +63,7 @@
       color: #FFD700;
     }
 
+    /* 書籤樣式 */
     .tabs {
       display: flex;
       align-items: center;
@@ -85,15 +86,15 @@
     }
 
     .tab-link.active.lyrics-tab {
-      background-color: #0032a8;
+      background-color: #0032a8; /* 藍色，歌詞查詢 */
     }
     
     .tab-link.active.pinyin-tab {
-      background-color: #4CAF50;
+      background-color: #4CAF50; /* 綠色，拼音查詢 */
     }
 
     .tab-link.active.ppt-recognition-tab {
-      background-color: #FF5722;
+      background-color: #FF5722; /* 橙色，歌詞辨識 */
     }
 
     .tab-content {
@@ -335,6 +336,17 @@
       margin: 10px 0px;
       padding-left: 20px;
     }
+
+    .database-preview {
+      margin-top: 10px;
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: left;
+      max-width: 1200px;
+      margin: 10px auto;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -377,10 +389,9 @@
       <span class="close">×</span>
       <h2>關於工具</h2>
       <div class="modal-body">
-        <h3>批批踢的福音 搜索器</h3>
-        <p>某天我再做歌的時候發現他們的官網不太好用，要跳來跳去找中文英文，還要去下載ppt很麻煩，所以就想說自己做一個方便一點的網頁。來工作的也辛苦了~</p>
+        <h3>專為[影音部視覺投影團隊]量身訂做的工具們的家</h3>
+        <p>某天我和往常一樣，來到位子上把烈火要用的歌詞做完...的時候發現他們的官網不太好用，要跳來跳去找中文英文，還要去下載ppt有點麻煩，所以就想說自己做一個方便一點的網頁。對了，我的目標是把在這個崗位的需求都簡化或解決，所以如果有甚麼覺得麻煩或可以更簡單的辦法都可以跟我說，我盡力而為~~</p>
         <h3>資料來源</h3>
-        <a href="https://crptransfer.moe.edu.tw/index.jsp" target="_blank" style="color:blue;">教育部拼音查詢系統</a><br/>
         <a href="https://sop.org/" target="_blank" style="color: blue;">讚美之泉官方網站</a>
         <h3>歷史版本</h3>
         <ul class="modal-body-h">
@@ -388,9 +399,11 @@
           <li>1.2 - 增加"關於工具"描述、下載繁體ppt功能</li>
           <li>1.3 - 增加拼音查詢功能</li>
           <li>1.4 - 優化拼音查詢功能</li>
-          <li>1.5 - 增加歌詞辨識功能</li>
+          <li>2.0 - 拼音查詢功能完善</li>
+
         </ul>
         <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" target="_blank" style="font-size: 1.1em;color: blue;">了解更多</a>
+        <span target="_blank" style="font-size: 1.1em;color: blue;">聯絡信箱:11230210@tschool.tp.edu.tw</span>
       </div>
     </div>
   </div>
@@ -407,7 +420,8 @@
           <label><input type="checkbox" id="showOriginalText"> 在拼音上方顯示原始文字</label>
           <label><input type="checkbox" id="enableMiConversion"> 啟用mi轉換</label>
           <label><input type="checkbox" id="enableAutoNewline"> 啟用自動換行</label>
-          <label><input type="checkbox" id="enableSimplifiedConversion"> 啟用簡體轉換</label>
+          <label><input type="checkbox" id="enableSimplifiedConversion"> 轉換為繁體</label>
+          <label><input type="checkbox" id="enableTraditionalConversion"> 轉換為簡體</label>
           <button type="button" id="convertPinyinButton" class="pinyin-button">轉換拼音</button>
         </div>
         <div class="error-message" id="errorMessagePinyin" style="display: none;"></div>
@@ -439,15 +453,32 @@
     <span class="spinner"></span>資料載入中，請稍候...
   </div>
 
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/sxei/pinyinjs@master/dict/pinyin_dict_notone.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/sxei/pinyinjs@master/pinyinUtil.js"></script>
-
   <script>
     $(document).ready(function() {
       let songsDatabase = [];
       let isDataLoaded = false;
-      let originalInput = '';
-      let conversionMap = {}; // 儲存從 GitHub 導入的轉換映射 (簡體 -> 繁體)
+      let originalInput = ''; // 用於儲存原始輸入以便恢復
+      let tw2cnDatabase = {}; // 繁體到簡體
+      let cn2twDatabase = {}; // 簡體到繁體
+
+      // 載入繁簡轉換資料庫
+      async function loadTw2cnDatabase() {
+        try {
+          const response = await fetch('https://raw.githubusercontent.com/YUNAN-B/propresentoool/refs/heads/main/tw2cn_database');
+          if (!response.ok) {
+            throw new Error('無法載入資料庫，狀態碼：' + response.status);
+          }
+          tw2cnDatabase = await response.json();
+          // 生成簡體到繁體的映射
+          cn2twDatabase = Object.fromEntries(
+            Object.entries(tw2cnDatabase).map(([cn, tw]) => [tw, cn])
+          );
+
+        } catch (error) {
+          $('#errorMessagePinyin').text('無法載入繁簡轉換資料庫，請檢查網路連線：' + error.message).show();
+          console.error('資料庫載入錯誤：', error);
+        }
+      }
 
       // 顯示 Modal
       $('#aboutLink').click(function() {
@@ -465,24 +496,6 @@
           $('#aboutModal').hide();
         }
       });
-
-      function loadConversionData() {
-  $('#loading').show();
-  return $.get('https://raw.githubusercontent.com/YUNAN-B/propresentoool/refs/heads/main/tw2cn_database')
-    .done(function(data) {
-      try {
-        conversionMap = JSON.parse(data); // 手動解析 JSON
-        $('#loading').hide();
-      } catch (e) {
-        $('#errorMessagePinyin').text('JSON 解析失敗：' + e.message).show();
-        $('#loading').hide();
-      }
-    })
-    .fail(function(jqXHR, textStatus, errorThrown) {
-      $('#errorMessagePinyin').text('無法載入轉換資料：' + textStatus + ' - ' + errorThrown).show();
-      $('#loading').hide();
-    });
-}
 
       // 載入資料
       function loadData() {
@@ -624,21 +637,55 @@
         return text.replace(new RegExp(`(${escapedKeyword})`, 'gi'), '<span class="highlight">$1</span>');
       }
 
-      // 繁體轉簡體函數，使用導入的 conversionMap
+      // 簡體轉換函數
       function convertToSimplified(text) {
-        if (Object.keys(conversionMap).length === 0) return text; // 如果資料未載入，返回原文字
-        return text.replace(/[萬與醜專業叢東絲丟兩嚴並喪個爿豐臨]/g, char => {
-          return conversionMap[char] ? Object.keys(conversionMap).find(key => conversionMap[key] === char) : char;
-        });
+        if (!tw2cnDatabase || Object.keys(tw2cnDatabase).length === 0) {
+          $('#errorMessagePinyin').text('繁簡轉換資料庫尚未載入').show();
+          return text;
+        }
+        return text.split('').map(char => tw2cnDatabase[char] || char).join('');
+      }
+
+      // 繁體轉換函數
+      function convertToTraditional(text) {
+        if (!cn2twDatabase || Object.keys(cn2twDatabase).length === 0) {
+          $('#errorMessagePinyin').text('繁簡轉換資料庫尚未載入').show();
+          return text;
+        }
+        return text.split('').map(char => cn2twDatabase[char] || char).join('');
+      }
+
+      // 使用 API 進行拼音轉換
+      async function convertToPinyin(text) {
+        const requestOptions = {
+          method: 'GET',
+          redirect: 'follow'
+        };
+        const url = `https://api.timelessq.com/pinyin?text=${text}`;
+        try {
+          const response = await fetch(url, requestOptions);
+          if (!response.ok) {
+            throw new Error(`API 請求失敗，狀態碼：${response.status}, 狀態文字：${response.statusText}`);
+          }
+          const result = await response.json();
+          console.log('API 響應：', result); // 記錄 API 響應以便調試
+          if (!result || !Array.isArray(result.data)) {
+            throw new Error('API 返回資料格式錯誤，缺少 data 陣列');
+          }
+          return result.data.join(' '); // 將拼音陣列轉為字串
+        } catch (error) {
+          throw new Error(`拼音轉換失敗：${error.message}`);
+        }
       }
 
       // 拼音轉換
-      $('#convertPinyinButton').click(function() {
+      $('#convertPinyinButton').click(async function() {
         const inputText = $('#lyrics-input').val().trim();
         const showOriginal = $('#showOriginalText').is(':checked');
         const enableMiConversion = $('#enableMiConversion').is(':checked');
         const enableAutoNewline = $('#enableAutoNewline').is(':checked');
         const enableSimplifiedConversion = $('#enableSimplifiedConversion').is(':checked');
+        const enableTraditionalConversion = $('#enableTraditionalConversion').is(':checked');
         $('#errorMessagePinyin').hide();
         $('#pinyinResultsTitle, #pinyinResultContainer').hide().empty();
 
@@ -647,82 +694,114 @@
           return;
         }
 
-        if (typeof pinyinUtil === 'undefined' || typeof pinyinUtil.getPinyin !== 'function') {
-          $('#errorMessagePinyin').text('拼音轉換函式庫尚未載入。請檢查網路連線或 CDN 連結。').show();
-          return;
-        }
-
         try {
           let processedText = inputText;
           if (enableAutoNewline) {
             processedText = processedText.replace(/\s+/g, '\n');
-            $('#lyrics-input').val(processedText);
+            $('#lyrics-input').val(processedText); // 即時更新輸入欄位
           } else if (originalInput && !enableAutoNewline) {
-            $('#lyrics-input').val(originalInput);
+            $('#lyrics-input').val(originalInput); // 恢復原始輸入
           }
-          if (enableSimplifiedConversion && Object.keys(conversionMap).length > 0) {
+          if (enableSimplifiedConversion && enableTraditionalConversion) {
+            $('#errorMessagePinyin').text('請勿同時啟用簡體和繁體轉換').show();
+            return;
+          }
+          if (enableSimplifiedConversion) {
             processedText = convertToSimplified(processedText);
-            $('#lyrics-input').val(processedText);
-          } else if (originalInput && !enableSimplifiedConversion) {
-            $('#lyrics-input').val(originalInput);
+            $('#lyrics-input').val(processedText); // 即時更新為簡體
+          } else if (enableTraditionalConversion) {
+            processedText = convertToTraditional(processedText);
+            $('#lyrics-input').val(processedText); // 即時更新為繁體
+          } else if (originalInput) {
+            $('#lyrics-input').val(originalInput); // 取消勾選時恢復原始輸入
           }
-          originalInput = inputText;
+          originalInput = inputText; // 儲存原始輸入
 
           const lines = processedText.split('\n');
           let pinyinOutputHtml = '';
 
-          lines.forEach(line => {
+          for (const line of lines) {
             const trimmedLine = line.trim();
             if (trimmedLine === '') {
               pinyinOutputHtml += '<br>';
-              return;
+              continue;
             }
-            let pinyinLine = pinyinUtil.getPinyin(trimmedLine, ' ', false, false);
+            const pinyinLine = await convertToPinyin(trimmedLine);
+            if (typeof pinyinLine !== 'string') {
+              throw new Error('拼音轉換結果不是字串');
+            }
+            let modifiedPinyinLine = pinyinLine;
             if (enableMiConversion) {
-              pinyinLine = pinyinLine.replace(/\bmi\b/g, match => {
+              modifiedPinyinLine = modifiedPinyinLine.replace(/\bmi\b/g, match => {
                 return trimmedLine.includes('祢') ? '<span style="color: red;">ni</span>' : match;
               });
             }
             if (showOriginal) {
               pinyinOutputHtml += `<div style="color: blue;">${trimmedLine}</div>`;
             }
-            pinyinOutputHtml += `<div>${pinyinLine}</div>`;
-          });
+            pinyinOutputHtml += `<div>${modifiedPinyinLine}</div>`;
+          }
 
           $('#pinyinResultContainer').html(pinyinOutputHtml);
           $('#pinyinResultsTitle, #pinyinResultContainer').show();
         } catch (e) {
           $('#errorMessagePinyin').text('轉換失敗。錯誤訊息：' + e.message).show();
+          console.error('拼音轉換錯誤：', e);
         }
       });
 
-      // 監聽勾選框變化以即時處理自動換行和簡體轉換
+      // 監聽勾選框變化以即時處理自動換行和簡繁轉換
       $('#enableAutoNewline').change(function() {
         const enableAutoNewline = $(this).is(':checked');
         let currentText = $('#lyrics-input').val().trim();
         if (enableAutoNewline && !originalInput) {
-          originalInput = currentText;
+          originalInput = currentText; // 首次啟用時儲存原始輸入
         }
         if (enableAutoNewline) {
           currentText = currentText.replace(/\s+/g, '\n');
           $('#lyrics-input').val(currentText);
         } else if (originalInput && !enableAutoNewline) {
-          $('#lyrics-input').val(originalInput);
+          $('#lyrics-input').val(originalInput); // 取消時恢復原始輸入
         }
       });
 
       $('#enableSimplifiedConversion').change(function() {
         const enableSimplifiedConversion = $(this).is(':checked');
+        const enableTraditionalConversion = $('#enableTraditionalConversion').is(':checked');
         let currentText = $('#lyrics-input').val().trim();
         if (enableSimplifiedConversion && !originalInput) {
-          originalInput = currentText;
-          loadConversionData(); // 首次啟用時載入轉換資料
+          originalInput = currentText; // 首次啟用時儲存原始輸入
         }
-        if (enableSimplifiedConversion && Object.keys(conversionMap).length > 0) {
+        if (enableSimplifiedConversion && enableTraditionalConversion) {
+          $('#errorMessagePinyin').text('請勿同時啟用簡體和繁體轉換').show();
+          $('#enableSimplifiedConversion').prop('checked', false);
+          return;
+        }
+        if (enableSimplifiedConversion) {
           currentText = convertToSimplified(currentText);
           $('#lyrics-input').val(currentText);
-        } else if (originalInput && !enableSimplifiedConversion) {
-          $('#lyrics-input').val(originalInput);
+        } else if (originalInput) {
+          $('#lyrics-input').val(originalInput); // 取消勾選時恢復原始輸入
+        }
+      });
+
+      $('#enableTraditionalConversion').change(function() {
+        const enableTraditionalConversion = $(this).is(':checked');
+        const enableSimplifiedConversion = $('#enableSimplifiedConversion').is(':checked');
+        let currentText = $('#lyrics-input').val().trim();
+        if (enableTraditionalConversion && !originalInput) {
+          originalInput = currentText; // 首次啟用時儲存原始輸入
+        }
+        if (enableTraditionalConversion && enableSimplifiedConversion) {
+          $('#errorMessagePinyin').text('請勿同時啟用簡體和繁體轉換').show();
+          $('#enableTraditionalConversion').prop('checked', false);
+          return;
+        }
+        if (enableTraditionalConversion) {
+          currentText = convertToTraditional(currentText);
+          $('#lyrics-input').val(currentText);
+        } else if (originalInput) {
+          $('#lyrics-input').val(originalInput); // 取消勾選時恢復原始輸入
         }
       });
 
@@ -776,6 +855,7 @@
           $(this).addClass('lyrics-tab');
         } else if (tabType === 'pinyin') {
           $(this).addClass('pinyin-tab');
+          $('#databasePreview').show();
         } else if (tabType === 'ppt-recognition') {
           $(this).addClass('ppt-recognition-tab');
         }
@@ -785,6 +865,7 @@
         $('#resultsTitle, #resultContainer').hide().empty();
         $('#pinyinResultsTitle, #pinyinResultContainer').hide().empty();
         $('#pptResultsTitle, #pptResultContainer').hide().empty();
+        $('#databasePreview').hide();
 
         const tabId = tabType + 'Tab';
         $('#' + tabId).show();
@@ -794,8 +875,8 @@
         }
       });
 
-      // 頁面載入時載入資料
-      loadData();
+      // 頁面載入時載入資料和繁簡轉換資料庫
+      $.when(loadData(), loadTw2cnDatabase());
     });
   </script>
 </body>
