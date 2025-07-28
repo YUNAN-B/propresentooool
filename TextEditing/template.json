@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "name": "空格整理",
+    "description": "將全形空格、多餘半形空格、行首尾空格替換為單一標準半形空格。",
+    "find": "(?<=[^\\p{P}\\s])\\s*(?=[\uFF01-\uFF5E])|(?<=[\u0021-\u007E])\\s*(?=[^\\p{P}\\s])|[\\u3000\\s]+(?=\\s*)|(?:^\\s+|\\s+$)",
+    "replace": " ",
+    "enabled": true
+  },
+  {
+    "id": 2,
+    "name": "刪除所有英文",
+    "description": "移除文本中所有的英文字母（大小寫）。",
+    "find": "[a-zA-Z]+",
+    "replace": "",
+    "enabled": true
+  },
+  {
+    "id": 3,
+    "name": "歌曲開頭標記",
+    "description": "在歌詞開頭加上 [Intro] 標記。",
+    "find": "^",
+    "replace": "[Intro]\n",
+    "enabled": false
+  },
+  {
+    "id": 4,
+    "name": "簡體轉繁體",
+    "description": "將常見簡體字轉換為繁體字（此為簡化範例）。",
+    "find": "你好|谢谢|学习",
+    "replace": "你好|謝謝|學習",
+    "enabled": false
+  }
+]
