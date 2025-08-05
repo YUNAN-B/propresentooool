@@ -1,434 +1,1945 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monaco Editor in Website</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      font-family: sans-serif;
-    }
-    #controls {
-      padding: 10px;
-      background-color: #f0f0f0;
-      border-bottom: 1px solid #ddd;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    #controls button {
-      padding: 8px 15px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background-color: #e0e0e0;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    #controls a {
-      padding: 8px 15px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background-color: #e0e0e0;
-      cursor: pointer;
-      font-size: 14px;
-      color: #000;
-      text-decoration:none
-    }
-    #controls button:hover {
-      background-color: #d0d0d0;
-    }
-    #editor {
-      width: 100%;
-      flex-grow: 1;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monaco Editor in Website</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* CSS 變數 - 方便管理顏色 */
+        :root {
+            /* 這些變數將由 JavaScript 動態設定 */
+            --main-accent-color: #4299E1; /* 主要強調色 */
+            --main-background-color: #1A202C; /* 主要背景色 */
+            --main-text-color: #E2E8F0; /* 主要文字色 */
+            --main-ui-element-color: #2D3748; /* 按鈕、輸入框背景色 */
+            --main-border-color: #4A5568; /* 邊界色 */
 
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background-color: #fefefe;
-      margin: auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 600px;
-      box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
-      animation-name: animatetop;
-      animation-duration: 0.4s;
-      border-radius: 8px;
-    }
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-    }
-    .modal-header h2 {
-      margin: 0;
-      font-size: 20px;
-    }
-    .close-button {
-      color: #aaa;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .close-button:hover,
-    .close-button:focus {
-      color: black;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .settings-item {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-      align-items: center;
-    }
-    .settings-item label {
-      min-width: 60px;
-    }
-    .settings-item input[type="text"] {
-      flex-grow: 1;
-      padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .settings-item input[type="color"] {
-      width: 40px;
-      height: 30px;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-    }
-    .settings-actions {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .settings-actions button {
-      padding: 8px 15px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background-color: #4CAF50;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .settings-actions button:hover {
-      background-color: #45a049;
-    }
+            /* 由主要顏色衍生出的變數 */
+            --button-bg-primary: var(--main-accent-color);
+            --button-bg-primary-hover: #3182CE; /* 預設深一點，或由 JS 調整 */
+            --button-bg-secondary: var(--main-ui-element-color);
+            --button-bg-secondary-hover: #CBD5E0; /* 預設淺一點，或由 JS 調整 */
+            --button-bg-danger: #E53E3E; /* 固定危險操作顏色 */
+            --button-bg-danger-hover: #C53030; /* 固定危險操作顏色懸停 */
 
-    @-webkit-keyframes animatetop {
-      from {top: -300px; opacity: 0}
-      to {top: 0; opacity: 1}
-    }
-    @keyframes animatetop {
-      from {top: -300px; opacity: 0}
-      to {top: 0; opacity: 1}
-    }
+            --dark-blue-bg: var(--main-background-color);
+            --dark-blue-primary: var(--main-ui-element-color); /* 現在這個變數對應到 UI Element Color */
+            --dark-blue-secondary: var(--main-border-color); /* 現在這個變數對應到 Border Color */
 
-    .monaco-editor .token.lyric-tag-custom {
-      font-weight: bold;
-    }
-  </style>
+            --light-text: var(--main-text-color);
+            --light-text-secondary: #A0AEC0; /* 預設灰一點，或由 JS 調整 */
+
+            --input-border: var(--main-border-color);
+            --input-bg: var(--main-ui-element-color);
+
+            /* 通用變數 */
+            --border-radius-sm: 4px;
+            --border-radius-md: 8px;
+            --font-family-base: 'Open Sans', sans-serif;
+            --font-family-chinese: 'Noto Sans TC', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family-base), var(--font-family-chinese);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: var(--dark-blue-bg);
+            color: var(--light-text);
+            overflow: hidden; /* 防止滾動條 */
+        }
+
+        #header {
+            background-color: var(--dark-blue-primary);
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--light-text);
+        }
+
+        #main-content {
+            display: flex;
+            flex-grow: 1; /* 佔據剩餘空間 */
+            overflow: hidden; /* 確保內容不會溢出 */
+        }
+
+        #controls {
+            background-color: var(--dark-blue-primary);
+            padding: 15px;
+            display: flex;
+            flex-direction: column; /* 改為垂直佈局 */
+            gap: 10px; /* 按鈕間距 */
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 5;
+            flex-shrink: 0; /* 防止縮小 */
+            width: 180px; /* 固定寬度 */
+            overflow-y: auto; /* 超出時允許滾動 */
+        }
+
+        #controls button,
+        #controls a.button-link {
+            padding: 8px 15px;
+            border: 1px solid var(--button-bg-primary);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--button-bg-primary);
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            text-align: center; /* 確保文字居中 */
+            display: block; /* 讓按鈕獨佔一行 */
+            width: 100%; /* 填充父容器寬度 */
+            box-sizing: border-box; /* 包含 padding 和 border 在寬度內 */
+        }
+
+        #controls button:hover,
+        #controls a.button-link:hover {
+            background-color: var(--button-bg-primary-hover);
+            border-color: var(--button-bg-primary-hover);
+        }
+
+        /* 側邊欄其他按鈕的基礎樣式 */
+        #controls button:not(.dropbtn),
+        #controls a:not(.dropbtn) {
+            background-color: var(--dark-blue-secondary);
+            border-color: var(--dark-blue-secondary);
+            color: var(--light-text);
+        }
+
+        #controls button:not(.dropbtn):hover,
+        #controls a:not(.dropbtn):hover {
+            background-color: var(--dark-blue-primary);
+            border-color: var(--dark-blue-primary);
+        }
+
+
+        #editor {
+            flex-grow: 1; /* 佔據剩餘空間 */
+            height: 100%;
+            border-left: 1px solid var(--dark-blue-secondary);
+        }
+
+        /* 模態框樣式 */
+        .modal {
+            display: none; /* 預設隱藏 */
+            position: fixed; /* 固定定位 */
+            z-index: 100; /* 確保在最上層 */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* 如果內容過多，允許滾動 */
+            background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
+            justify-content: center; /* 水平居中 */
+            align-items: center; /* 垂直居中 */
+        }
+
+        .modal-content {
+            background-color: var(--dark-blue-primary);
+            margin: auto;
+            padding: 20px;
+            border: 1px solid var(--dark-blue-secondary);
+            border-radius: var(--border-radius-md);
+            width: 80%; /* 模態框寬度 */
+            max-width: 600px; /* 最大寬度 */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            color: var(--light-text);
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh; /* 限制模態框最大高度 */
+            overflow-y: auto; /* 如果內容超出，允許滾動 */
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--dark-blue-secondary);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .close-button {
+            color: var(--light-text-secondary);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--light-text);
+            text-decoration: none;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--light-text-secondary);
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="color"],
+        .form-group input[type="number"],
+        .settings-select,
+        .form-group textarea {
+            width: calc(100% - 22px); /* 考慮 padding 和 border */
+            padding: 10px;
+            border: 1px solid var(--input-border);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--input-bg);
+            color: var(--light-text);
+            font-size: 14px;
+            box-sizing: border-box; /* 確保寬度計算正確 */
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-group input[type="color"] {
+            height: 40px;
+            padding: 2px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--button-bg-primary);
+        }
+
+        /* 標籤顏色設定列表樣式 */
+        .settings-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 300px; /* 限制列表高度 */
+            overflow-y: auto; /* 允許滾動 */
+            border: 1px solid var(--dark-blue-secondary);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 15px;
+        }
+
+        /* 標籤顏色設定列表的每個項目 */
+        .settings-list li {
+            display: grid; /* 使用 Grid 佈局 */
+            grid-template-columns: 1fr auto auto; /* 名稱、顏色方塊、操作按鈕 */
+            gap: 10px; /* 元素間距 */
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--dark-blue-secondary);
+        }
+
+        .settings-list li:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info-display {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .setting-info-display .name {
+            font-weight: bold;
+            color: var(--light-text);
+        }
+        .setting-info-display .pattern {
+            font-size: 12px;
+            color: var(--light-text-secondary);
+        }
+
+
+        .setting-color-box {
+            width: 24px;
+            height: 24px;
+            border: 1px solid var(--dark-blue-secondary);
+            border-radius: var(--border-radius-sm);
+            flex-shrink: 0; /* 防止縮小 */
+        }
+
+        .setting-actions-row {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0; /* 防止縮小 */
+        }
+
+        .setting-actions-row button {
+            background-color: var(--button-bg-primary);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s ease;
+        }
+
+        .setting-actions-row button:hover {
+            background-color: var(--button-bg-primary-hover);
+        }
+
+        .setting-actions-row button.delete-btn {
+            background-color: var(--button-bg-danger);
+        }
+
+        .setting-actions-row button.delete-btn:hover {
+            background-color: var(--button-bg-danger-hover);
+        }
+
+        .modal-footer, .settings-actions, .template-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid var(--dark-blue-secondary);
+            margin-top: 15px;
+        }
+
+        .modal-footer button, .settings-actions button, .template-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .modal-footer button.primary, .settings-actions button.primary {
+            background-color: var(--button-bg-primary);
+            color: white;
+        }
+
+        .modal-footer button.primary:hover, .settings-actions button.primary:hover {
+            background-color: var(--button-bg-primary-hover);
+        }
+
+        .modal-footer button.secondary, .settings-actions button.secondary {
+            background-color: var(--button-bg-secondary);
+            color: var(--dark-blue-primary); /* 文字顏色為深藍 */
+        }
+
+        .modal-footer button.secondary:hover, .settings-actions button.secondary:hover {
+            background-color: var(--button-bg-secondary-hover);
+        }
+
+        .modal-footer button.danger { /* 新增 danger 按鈕樣式 */
+            background-color: var(--button-bg-danger);
+            color: white;
+        }
+
+        .modal-footer button.danger:hover {
+            background-color: var(--button-bg-danger-hover);
+        }
+
+
+        /* 通知訊息 */
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notification {
+            background-color: #38A169; /* 成功綠色 */
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--border-radius-sm);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background-color: #E53E3E; /* 錯誤紅色 */
+        }
+
+        /* 模板列表樣式 */
+        .templates-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 400px; /* 限制高度 */
+            overflow-y: auto;
+            border: 1px solid var(--dark-blue-secondary);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 15px;
+        }
+
+        /* 模板列表的每個項目 */
+        .templates-list li {
+            display: grid; /* 使用 Grid 佈局 */
+            grid-template-columns: auto 1fr auto auto auto; /* Checkbox, 名稱/說明, 啟用, 編輯 */
+            gap: 10px; /* 元素間距 */
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--dark-blue-secondary);
+        }
+
+        .templates-list li:last-child {
+            border-bottom: none;
+        }
+
+        .template-checkbox {
+            margin-right: 5px;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0; /* 防止縮小 */
+        }
+
+        .template-info-display {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            /* overflow: hidden; */ /* 允許文字換行 */
+        }
+
+        .template-title {
+            font-weight: bold;
+            color: var(--light-text);
+            font-size: 16px;
+            white-space: nowrap; /* 不換行 */
+            overflow: hidden; /* 隱藏溢出 */
+            text-overflow: ellipsis; /* 顯示省略號 */
+        }
+
+        .template-description {
+            font-size: 12px;
+            color: var(--light-text-secondary);
+            white-space: nowrap; /* 不換行 */
+            overflow: hidden; /* 隱藏溢出 */
+            text-overflow: ellipsis; /* 顯示省略號 */
+        }
+
+        .template-actions-row {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0; /* 防止縮小 */
+        }
+
+        .template-actions-row button {
+            background-color: var(--button-bg-primary);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s ease;
+        }
+
+        .template-actions-row button:hover {
+            background-color: var(--button-bg-primary-hover);
+        }
+
+        .template-actions-row button.delete-btn {
+            background-color: var(--button-bg-danger);
+        }
+
+        .template-actions-row button.delete-btn:hover {
+            background-color: var(--button-bg-danger-hover);
+        }
+
+        /* 尋找替換模態框中的輸入組 */
+        .find-replace-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .find-replace-inputs .form-group {
+            margin-bottom: 0; /* 覆蓋模態框中通用的 margin-bottom */
+        }
+
+        /* 模態框中的按鈕組 */
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid var(--dark-blue-secondary);
+            margin-top: auto; /* 將按鈕組推到底部 */
+        }
+
+        /* 下拉選單樣式 */
+        .dropdown {
+            position: relative;
+            display: inline-block; /* 讓其與其他按鈕並排顯示 */
+        }
+
+        .dropbtn {
+            padding: 8px 15px;
+            border: 1px solid var(--button-bg-primary);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--button-bg-primary);
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px; /* 按鈕文字和箭頭的間距 */
+        }
+
+        .dropbtn:hover {
+            background-color: var(--button-bg-primary-hover);
+            border-color: var(--button-bg-primary-hover);
+        }
+
+        .arrow-down {
+            font-size: 10px; /* 箭頭大小 */
+        }
+
+        .dropdown-content {
+            display: none; /* 預設隱藏 */
+            position: absolute;
+            background-color: var(--dark-blue-primary); /* 選單背景色 */
+            min-width: 180px; /* 選單最小寬度 */
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.4);
+            z-index: 1; /* 確保在其他內容之上 */
+            border-radius: var(--border-radius-sm);
+            border: 1px solid var(--dark-blue-secondary);
+            padding: 5px 0; /* 選單內邊距 */
+            top: 100%; /* 位於按鈕下方 */
+            left: 0;
+            /* margin-top: 5px; */ /* 移除這個空隙 */
+        }
+
+        .dropdown-content a {
+            color: var(--light-text);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap; /* 防止文字換行 */
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--dark-blue-secondary); /* 選項懸停背景色 */
+            color: var(--light-text);
+        }
+
+        /* 顯示下拉選單 */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* 確保點擊按鈕後選單也能顯示，並在懸停時保持顯示 */
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
+
+        /* 風格切換選項的容器 */
+        #styleOptions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 自適應列數 */
+            gap: 15px;
+            padding: 10px 0;
+        }
+
+        .style-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-sm);
+            padding: 10px;
+            transition: border-color 0.2s ease;
+        }
+
+        .style-option:hover {
+            border-color: var(--button-bg-primary);
+        }
+
+        .style-option.selected {
+            border-color: var(--button-bg-primary-hover);
+            box-shadow: 0 0 0 2px var(--button-bg-primary-hover);
+        }
+
+        .color-box {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 8px;
+            border: 1px solid var(--dark-blue-secondary);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .style-option-label {
+            font-size: 13px;
+            color: var(--light-text-secondary);
+            text-align: center;
+        }
+
+        /* 針對 select 元素的樣式 */
+        .settings-select {
+            padding: 8px;
+            border: 1px solid var(--input-border);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--input-bg);
+            color: var(--light-text);
+            font-size: 14px;
+            appearance: none; /* 移除預設下拉箭頭 */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23A0AEB0" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>'); /* 自訂下拉箭頭 */
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 20px;
+            cursor: pointer;
+            flex-grow: 1; /* 讓 select 填充可用空間 */
+            width: auto; /* 覆蓋 calc(100% - 22px) */
+        }
+
+        .settings-select:focus {
+            outline: none;
+            border-color: var(--button-bg-primary);
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .settings-item label {
+            min-width: 80px; /* 讓標籤對齊 */
+            color: var(--light-text-secondary);
+        }
+
+        /* 新增：標籤顏色設定表單的 UI 調整 */
+        #settingForm {
+            display: grid;
+            grid-template-columns: auto 1fr; /* 標籤自動寬度，輸入框佔據剩餘空間 */
+            gap: 15px 10px; /* 行間距 15px, 列間距 10px */
+            align-items: center; /* 垂直置中對齊 */
+            /* 注意：JS 會動態設定 display 為 'grid' */
+        }
+
+        #settingForm .form-group {
+            display: contents; /* 讓 .form-group 的子元素直接參與到父層 #settingForm 的 grid 佈局中 */
+            margin-bottom: 0; /* 移除原本的底部外邊距，因為 grid 的 gap 會處理間距 */
+        }
+
+        #settingForm .form-group label {
+            margin-bottom: 0; /* 移除標籤本身的底部外邊距 */
+            text-align: right; /* 標籤文字靠右對齊 */
+            padding-right: 5px; /* 標籤和輸入框之間的小間距 */
+            min-width: 80px; /* 為標籤設定最小寬度，以確保對齊一致性 */
+        }
+
+        #settingForm .form-group input[type="text"],
+        #settingForm .form-group input[type="color"] {
+            width: 100%; /* 輸入框填滿其所在的 grid 欄位 */
+            /* 移除原有的 calc(100% - 22px) */
+        }
+
+        #settingForm #patternError {
+            grid-column: 2; /* 讓錯誤訊息只顯示在第二列（輸入框下方） */
+            text-align: left; /* 錯誤文字靠左對齊 */
+            margin-top: -10px; /* 向上微調，使其更靠近輸入框 */
+            margin-bottom: 0; /* 確保沒有額外的底部空間 */
+        }
+
+        /* 確保 modal-footer 在 grid 佈局中也跨越所有列 */
+        #settingsModal .modal-footer {
+            grid-column: 1 / -1; /* 讓按鈕區塊橫跨所有列 */
+            display: flex; /* 保持其內部按鈕的 flex 佈局 */
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid var(--dark-blue-secondary);
+            margin-top: 15px;
+        }
+
+        /* Checkbox 樣式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--dark-blue-secondary);
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--button-bg-primary);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--button-bg-primary);
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(16px);
+            -ms-transform: translateX(16px);
+            transform: translateX(16px);
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.34.0/min/vs/loader.js"></script>
 </head>
 <body>
-  <div id="controls">
-    <button id="settingsButton">設定標籤顏色</button>
-    <button id="copyButton">複製內容</button>
-    <a href="https://yunan-b.github.io/propresentooool/">回家</a>
-  </div>
-  <div id="editor"></div>
-  <div id="settingsModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>標籤顏色設定</h2>
-        <span class="close-button">&times;</span>
-      </div>
-      <div id="settingsList"></div>
-      <div class="settings-actions">
-        <button id="resetDefaultsButton">回復預設</button>
-        <button id="addRowButton">新增規則</button>
-        <button id="saveSettingsButton">儲存變更</button>
-      </div>
+    <div id="header">
+        <h1>我的歌詞編輯器</h1>
     </div>
-  </div>
 
-  <!-- 從 CDN 載入 Monaco Editor -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/loader.min.js"></script>
-  <script>
-    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs' } });
-    require(['vs/editor/editor.main'], function () {
-      const defaultSettings = [
-        { pattern: '([Vv]erse)? ?1\\.?', color: '#0000E3' },
-        { pattern: '([Vv]erse)? ?2\\.?', color: '#00DB00' },
-        { pattern: '([Vv]erse)? ?3\\.?', color: '#FF5809' },
-        { pattern: '[Cc]horus', color: '#FF0000' },
-        { pattern: '[Bb]ridge', color: '#AE00AE' }
-      ];
+    <div id="main-content">
+        <div id="controls">
+            <div class="dropdown">
+                <button class="dropbtn" id="settingsDropdownButton">設定 <span class="arrow-down">&#9660;</span></button>
+                <div class="dropdown-content">
+                    <a href="#" id="styleSwitcherOption">風格切換</a>
+                    <a href="#" id="labelColorSettingsOption">標籤顏色設定</a>
+                    <a href="#" id="languageOption">語言</a>
+                    <a href="#" id="editorOptionsOption">編輯器選項</a>
+                </div>
+            </div>
+            <button id="templatesButton">模板</button>
+            <button id="copyButton">複製</button>
+            <button id="helpButton">幫助</button>
+            <a href="index.html" class="button-link">回家</a>
+        </div>
+        <div id="editor"></div>
+    </div>
 
-      let editor = null;
+    <div id="notification-container"></div>
 
-      function loadSettings() {
-        try {
-          const storedSettings = localStorage.getItem('lyricHighlightSettings');
-          return storedSettings ? JSON.parse(storedSettings) : defaultSettings;
-        } catch (e) {
-          console.error("Error loading settings from localStorage:", e);
-          return defaultSettings;
-        }
-      }
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="settingsModalTitle">標籤顏色設定</h2>
+                <span class="close-button" data-modal="settingsModal">&times;</span>
+            </div>
+            <form id="settingForm" style="display: none;">
+                <div class="form-group">
+                    <label for="settingNameInput">標題:</label>
+                    <input type="text" id="settingNameInput" placeholder="例如: Verse 標籤" required>
+                </div>
+                <div class="form-group">
+                    <label for="patternInput">正規表達式模式:</label>
+                    <input type="text" id="patternInput" placeholder="例如: Verse \d+|Chorus|Bridge" required>
+                </div>
+                <span id="patternError" style="color: red; font-size: 12px; display: none;">無效的正規表達式</span>
+                <div class="form-group">
+                    <label for="colorInput">顏色:</label>
+                    <input type="color" id="colorInput" value="#FFFF00">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="danger" id="deleteSettingButton" style="display: none;">刪除</button>
+                    <button type="button" class="secondary" id="cancelSettingEdit">取消</button>
+                    <button type="submit" class="primary" id="saveSettingButton">儲存設定</button>
+                </div>
+            </form>
 
-      function saveSettings(settings) {
-        try {
-          localStorage.setItem('lyricHighlightSettings', JSON.stringify(settings));
-          return true;
-        } catch (e) {
-          console.error("Error saving settings to localStorage:", e);
-          alert('儲存失敗，可能是 localStorage 已滿！');
-          return false;
-        }
-      }
+            <ul id="settingsList" class="settings-list">
+                </ul>
+            <div class="modal-footer" id="settingsListFooter">
+                <button type="button" class="primary" id="addNewSettingButton">新增標籤顏色</button>
+            </div>
+        </div>
+    </div>
 
-      function applyEditorSettings(currentSettings) {
-        if (!monaco) return;
+    <div id="templatesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>尋找替換模板</h2>
+                <span class="close-button" data-modal="templatesModal">&times;</span>
+            </div>
+            <ul id="templatesList" class="templates-list">
+                </ul>
+            <div class="template-actions">
+                <button id="activateSelectedTemplates" class="primary">啟用選取項目</button>
+                <button id="addNewTemplateButton" class="primary">新增模板</button>
+            </div>
+        </div>
+    </div>
 
-        const rules = [];
-        const cssRules = [];
-        const validSettings = currentSettings.filter(setting => {
-          try {
-            new RegExp(setting.pattern);
-            return true;
-          } catch (e) {
-            console.warn(`Invalid regex pattern "${setting.pattern}":`, e);
-            return false;
-          }
-        });
+    <div id="editTemplateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="editTemplateTitle">新增模板</h2>
+                <span class="close-button" data-modal="editTemplateModal">&times;</span>
+            </div>
+            <form id="editTemplateForm">
+                <div class="form-group">
+                    <label for="editTemplateNameInput">模板名稱:</label>
+                    <input type="text" id="editTemplateNameInput" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTemplateDescInput">描述 (選填):</label>
+                    <textarea id="editTemplateDescInput"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editTemplateFindInput">尋找模式 (正規表達式):</label>
+                    <input type="text" id="editTemplateFindInput" required>
+                </div>
+                <span id="editPatternError" style="color: red; font-size: 12px; display: none;">無效的正規表達式</span>
+                <div class="form-group">
+                    <label for="editTemplateReplaceInput">替換為:</label>
+                    <textarea id="editTemplateReplaceInput"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="secondary" id="cancelEditTemplate">取消</button>
+                    <button type="submit" class="primary" id="saveEditTemplateBtn">儲存模板</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        validSettings.forEach((setting, index) => {
-          const regex = new RegExp(setting.pattern, 'g');
-          rules.push([regex, `lyric-tag-custom-${index}`]);
-          cssRules.push(`.monaco-editor .token.lyric-tag-custom-${index} { color: ${setting.color} !important; }`);
-        });
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>使用說明與快捷鍵</h2>
+                <span class="close-button" data-modal="helpModal">&times;</span>
+            </div>
+            <div id="helpContent">
+                <div class="help-section">
+                    <h3>📝 編輯器基本功能</h3>
+                    <p>這是一個專為歌詞編輯設計的Monaco編輯器，具有語法高亮和多種輔助功能。</p>
+                    <ul>
+                        <li><strong>語法高亮</strong>：自動為 Verse 1、Verse 2、Chorus、Bridge 等標籤加上顏色標記。</li>
+                        <li><strong>自動佈局</strong>：編輯器會自動調整大小適應視窗。</li>
+                        <li><strong>多行編輯</strong>：支援同時編輯多個位置的文字。</li>
+                    </ul>
+                </div>
 
-        let styleTag = document.getElementById('monaco-custom-styles');
-        if (!styleTag) {
-          styleTag = document.createElement('style');
-          styleTag.id = 'monaco-custom-styles';
-          document.head.appendChild(styleTag);
-        }
-        styleTag.innerHTML = cssRules.join('\n');
+                <div class="help-section">
+                    <h3>🎨 標籤顏色設定</h3>
+                    <p>點擊「設定標籤顏色」按鈕可以自定義歌詞標籤的顏色。</p>
+                    <ul>
+                        <li><strong>啟用/禁用規則</strong>：可以暫時開啟或關閉某個顏色規則，而無需刪除。</li>
+                        <li><strong>新增規則</strong>：可以加入新的正規表達式模式和對應顏色。</li>
+                        <li><strong>編輯現有規則</strong>：修改文字模式或顏色。</li>
+                        <li><strong>移除規則</strong>：刪除不需要的顏色規則。</li>
+                        <li><strong>回復預設</strong>：恢復到系統預設的顏色設定。</li>
+                        <li><strong>正規表達式</strong>：支援使用正規表達式來匹配複雜的文字模式。</li>
+                    </ul>
+                </div>
 
-        monaco.languages.register({ id: 'lyrics' });
+                <div class="help-section">
+                    <h3>🔄 查找替換模板</h3>
+                    <p>點擊「查找替換模板」按鈕可以使用預設或自定義的文字處理規則。</p>
+                    <ul>
+                        <li><strong>預設模板</strong>：包含多個常用文字處理功能，如空格整理、刪除英文、移除空白行等。</li>
+                        <li><strong>自定義模板</strong>：可以建立、編輯和儲存自己的查找替換規則。</li>
+                        <li><strong>單獨套用</strong>：點擊模板旁的「套用」按鈕即可對編輯器內容執行該規則。</li>
+                        <li><strong>批量套用</strong>：勾選多個模板後，點擊「套用已選模板」可一次性執行所有選定的規則。</li>
+                        <li>**支援復原**：所有模板套用操作都可以透過 `Ctrl + Z` (Windows/Linux) 或 `Cmd + Z` (macOS) 撤銷。</li>
+                    </ul>
+                </div>
 
-        monaco.languages.setMonarchTokensProvider('lyrics', {
-          tokenizer: {
-            root: [
-              ...rules,
-              [/./, ''],
-            ]
-          }
-        });
+                <div class="help-section">
+                    <h3>📋 其他功能</h3>
+                    <ul>
+                        <li><strong>複製內容</strong>：一鍵複製編輯器中的所有內容到剪貼簿。</li>
+                        <li><strong>自動儲存</strong>：所有設定會自動保存到瀏覽器本地儲存，重新打開頁面也會保留。</li>
+                        <li><strong>回家連結</strong>：返回到主頁面（index.html）。</li>
+                    </ul>
+                </div>
 
-        monaco.editor.defineTheme('lyrics-custom-theme', {
-          base: 'vs',
-          inherit: true,
-          rules: validSettings.map((setting, index) => ({
-            token: `lyric-tag-custom-${index}`,
-            foreground: setting.color.substring(1)
-          })),
-          colors: {}
-        });
+                <div class="help-section">
+                    <h3>⌨️ 快捷鍵列表</h3>
+                    <div class="shortcut-grid">
+                        <div class="shortcut-category">
+                            <h4>基本編輯</h4>
+                            <div class="shortcut-item">全選 <kbd>Ctrl</kbd> + <kbd>A</kbd></div>
+                            <div class="shortcut-item">複製 <kbd>Ctrl</kbd> + <kbd>C</kbd></div>
+                            <div class="shortcut-item">貼上 <kbd>Ctrl</kbd> + <kbd>V</kbd></div>
+                            <div class="shortcut-item">剪下 <kbd>Ctrl</kbd> + <kbd>X</kbd></div>
+                            <div class="shortcut-item">復原 <kbd>Ctrl</kbd> + <kbd>Z</kbd></div>
+                            <div class="shortcut-item">重做 <kbd>Ctrl</kbd> + <kbd>Y</kbd></div>
+                        </div>
 
-        if (editor) {
-          monaco.editor.setModelLanguage(editor.getModel(), 'lyrics');
-          monaco.editor.setTheme('lyrics-custom-theme');
-        }
-      }
+                        <div class="shortcut-category">
+                            <h4>查找替換</h4>
+                            <div class="shortcut-item">查找 <kbd>Ctrl</kbd> + <kbd>F</kbd></div>
+                            <div class="shortcut-item">查找並替換 <kbd>Ctrl</kbd> + <kbd>H</kbd></div>
+                            <div class="shortcut-item">查找下一個 <kbd>F3</kbd></div>
+                            <div class="shortcut-item">查找上一個 <kbd>Shift</kbd> + <kbd>F3</kbd></div>
+                            <div class="shortcut-item">跳至行號 <kbd>Ctrl</kbd> + <kbd>G</kbd></div>
+                        </div>
 
-      function renderSettingsUI(settings) {
-        const settingsList = document.getElementById('settingsList');
-        const fragment = document.createDocumentFragment();
-        settingsList.innerHTML = '';
+                        <div class="shortcut-category">
+                            <h4>選取操作</h4>
+                            <div class="shortcut-item">選取整行 <kbd>Ctrl</kbd> + <kbd>L</kbd></div>
+                            <div class="shortcut-item">選取相同文字 <kbd>Ctrl</kbd> + <kbd>D</kbd></div>
+                            <div class="shortcut-item">移動行 <kbd>Alt</kbd> + <kbd>↑/↓</kbd></div>
+                            <div class="shortcut-item">複製行 <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>↑/↓</kbd></div>
+                            <div class="shortcut-item">刪除行 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd></div>
+                        </div>
 
-        settings.forEach((setting, index) => {
-          const div = document.createElement('div');
-          div.className = 'settings-item';
-          const rowId = `setting-row-${Date.now()}-${index}`;
-          div.id = rowId;
+                        <div class="shortcut-category">
+                            <h4>多游標編輯</h4>
+                            <div class="shortcut-item">新增游標 <kbd>Alt</kbd> + <kbd>Click</kbd></div>
+                            <div class="shortcut-item">上下新增游標 <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>↑/↓</kbd></div>
+                            <div class="shortcut-item">為所有相同文字加游標 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd></div>
+                            <div class="shortcut-item">取消多游標模式 <kbd>Esc</kbd></div>
+                        </div>
 
-          div.innerHTML = `
-            <label for="pattern-${rowId}">文字 (正規表達式):</label>
-            <input type="text" id="pattern-${rowId}" value="${escapeHtml(setting.pattern)}" placeholder="例如: \\\\\[Verse\\s+\\d+\\\\\]">
-            <label for="color-${rowId}">顏色:</label>
-            <input type="color" id="color-${rowId}" value="${escapeHtml(setting.color)}">
-            <button class="remove-row-button" data-row-id="${rowId}">移除</button>
-          `;
+                        <div class="shortcut-category">
+                            <h4>縮排與格式</h4>
+                            <div class="shortcut-item">增加縮排 <kbd>Tab</kbd></div>
+                            <div class="shortcut-item">減少縮排 <kbd>Shift</kbd> + <kbd>Tab</kbd></div>
+                            <div class="shortcut-item">切換註解 <kbd>Ctrl</kbd> + <kbd>/</kbd></div>
+                            <div class="shortcut-item">格式化文件 <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd></div>
+                        </div>
 
-          div.querySelector('.remove-row-button').addEventListener('click', function() {
-            removeSettingRow(this.dataset.rowId);
-          });
+                        <div class="shortcut-category">
+                            <h4>視圖控制</h4>
+                            <div class="shortcut-item">放大字體 <kbd>Ctrl</kbd> + <kbd>+</kbd></div>
+                            <div class="shortcut-item">縮小字體 <kbd>Ctrl</kbd> + <kbd>-</kbd></div>
+                            <div class="shortcut-item">重設字體大小 <kbd>Ctrl</kbd> + <kbd>0</kbd></div>
+                            <div class="shortcut-item">全螢幕模式 <kbd>F11</kbd></div>
+                        </div>
+                    </div>
+                </div>
 
-          fragment.appendChild(div);
-        });
+                <div class="help-section">
+                    <h3>💡 使用技巧</h3>
+                    <ul>
+                        <li><strong>正規表達式</strong>：在查找替換中可以使用正規表達式，它可以讓您處理更複雜的文字模式。</li>
+                        <li><strong>多行選取</strong>：按住 <kbd>Alt</kbd> 鍵並點擊多個位置，可以在這些位置同時建立游標並進行編輯。</li>
+                        <li><strong>快速選取</strong>：雙擊選取單字，三擊選取整行。</li>
+                        <li><strong>括號匹配</strong>：編輯器會自動高亮顯示對應的括號，幫助您快速找到程式碼結構。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        settingsList.appendChild(fragment);
-      }
+    <div id="styleSwitcherModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>風格切換</h2>
+                <span class="close-button" data-modal="styleSwitcherModal">&times;</span>
+            </div>
+            <h3>預設風格</h3>
+            <div id="styleOptions">
+                </div>
+            </div>
+    </div>
 
-      function escapeHtml(text) {
-        const map = {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#039;'
-        };
-        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-      }
+    <div id="languageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>語言設定</h2>
+                <span class="close-button" data-modal="languageModal">&times;</span>
+            </div>
+            <div class="form-group">
+                <label for="languageSelect">選擇語言:</label>
+                <select id="languageSelect" class="settings-select">
+                    <option value="zh-TW">繁體中文</option>
+                    <option value="en-US">English</option>
+                </select>
+            </div>
+            <div class="settings-actions">
+                <button id="saveLanguageButton" class="primary">儲存語言</button>
+            </div>
+        </div>
+    </div>
 
-      function addSettingRow() {
-        const settingsList = document.getElementById('settingsList');
-        const newRowId = `setting-row-${Date.now()}-${settingsList.children.length}`;
-        const div = document.createElement('div');
-        div.className = 'settings-item';
-        div.id = newRowId;
+    <div id="editorOptionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>編輯器選項</h2>
+                <span class="close-button" data-modal="editorOptionsModal">&times;</span>
+            </div>
+            <div class="settings-item">
+                <label for="fontSizeInput">字體大小:</label>
+                <input type="number" id="fontSizeInput" min="8" max="72" value="14">
+            </div>
+            <div class="settings-item">
+                <label for="wordWrapSelect">自動換行:</label>
+                <select id="wordWrapSelect" class="settings-select">
+                    <option value="off">關閉</option>
+                    <option value="on">開啟</option>
+                    <option value="wordWrapColumn">依照欄位</option>
+                    <option value="bounded">邊界限制</option>
+                </select>
+            </div>
+            <div class="settings-item">
+                <label for="showLineNumbersCheckbox">顯示行號:</label>
+                <label class="switch">
+                    <input type="checkbox" id="showLineNumbersCheckbox">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <label for="showMinimapCheckbox">顯示迷你地圖:</label>
+                <label class="switch">
+                    <input type="checkbox" id="showMinimapCheckbox">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="settings-item">
+                <label for="tabSizeInput">Tab 鍵大小:</label>
+                <input type="number" id="tabSizeInput" min="1" max="8" value="4">
+            </div>
 
-        div.innerHTML = `
-          <label for="pattern-${newRowId}">文字 (正規表達式):</label>
-          <input type="text" id="pattern-${newRowId}" value="" placeholder="例如: \\\\\[Verse\\s+\\d+\\\\\]">
-          <label for="color-${newRowId}">顏色:</label>
-          <input type="color" id="color-${newRowId}" value="#000000">
-          <button class="remove-row-button" data-row-id="${newRowId}">移除</button>
-        `;
+            <div class="settings-actions">
+                <button id="saveEditorOptionsButton" class="primary">儲存選項</button>
+                <button id="restoreTemplatesButton" class="secondary">恢復模板預設</button>
+                <button id="restoreColorSettingsButton" class="secondary">恢復顏色設定預設</button>
+            </div>
+        </div>
+    </div>
 
-        div.querySelector('.remove-row-button').addEventListener('click', function() {
-          removeSettingRow(this.dataset.rowId);
-        });
 
-        settingsList.appendChild(div);
-      }
+    <script>
+        let editor; // Monaco Editor 實例
+        let compiledRules = []; // 用於儲存編譯後的正規表達式和 token 名稱
 
-      function removeSettingRow(rowIdToRemove) {
-        const settingsList = document.getElementById('settingsList');
-        const rowToRemove = document.getElementById(rowIdToRemove);
-        if (rowToRemove) {
-          rowToRemove.remove();
-        }
+        // 配置 Monaco Editor 的基礎路徑
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.0/min/vs' } });
 
-        const currentSettings = [];
-        Array.from(settingsList.children).forEach(item => {
-          const patternInput = item.querySelector('input[type="text"]');
-          const colorInput = item.querySelector('input[type="color"]');
-          if (patternInput && colorInput) {
-            currentSettings.push({
-              pattern: patternInput.value,
-              color: colorInput.value
-            });
-          }
-        });
-        saveSettings(currentSettings);
-        applyEditorSettings(currentSettings);
-      }
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM 元素緩存
+            const settingsModal = document.getElementById('settingsModal');
+            const templatesModal = document.getElementById('templatesModal');
+            const helpModal = document.getElementById('helpModal');
+            const closeButtons = document.querySelectorAll('.close-button');
 
-      const initialSettings = loadSettings();
+            // 標籤顏色設定相關
+            const settingsModalTitle = document.getElementById('settingsModalTitle');
+            const settingForm = document.getElementById('settingForm');
+            const settingNameInput = document.getElementById('settingNameInput');
+            const patternInput = document.getElementById('patternInput');
+            const colorInput = document.getElementById('colorInput');
+            const saveSettingButton = document.getElementById('saveSettingButton');
+            const deleteSettingButton = document.getElementById('deleteSettingButton');
+            const cancelSettingEdit = document.getElementById('cancelSettingEdit');
+            const addNewSettingButton = document.getElementById('addNewSettingButton');
+            const settingsList = document.getElementById('settingsList');
+            const settingsListFooter = document.getElementById('settingsListFooter');
+            const patternError = document.getElementById('patternError');
 
-      editor = monaco.editor.create(document.getElementById('editor'), {
-        value: `1.
-2.
-Verse 1
-Verse2
-Verse 3`,
-        language: 'lyrics',
-        theme: 'lyrics-custom-theme',
-        automaticLayout: true
-      });
+            // 模板設定相關
+            const templatesList = document.getElementById('templatesList');
+            const activateSelectedTemplates = document.getElementById('activateSelectedTemplates');
+            const addNewTemplateButton = document.getElementById('addNewTemplateButton');
+            const editTemplateModal = document.getElementById('editTemplateModal');
+            const editTemplateTitle = document.getElementById('editTemplateTitle');
+            const editTemplateNameInput = document.getElementById('editTemplateNameInput');
+            const editTemplateDescInput = document.getElementById('editTemplateDescInput');
+            const editTemplateFindInput = document.getElementById('editTemplateFindInput');
+            const editTemplateReplaceInput = document.getElementById('editTemplateReplaceInput');
+            const saveEditTemplateBtn = document.getElementById('saveEditTemplateBtn');
+            const editPatternError = document.getElementById('editPatternError');
 
-      applyEditorSettings(initialSettings);
 
-      const settingsModal = document.getElementById('settingsModal');
-      const settingsButton = document.getElementById('settingsButton');
-      const closeButton = document.querySelector('.close-button');
-      const saveSettingsButton = document.getElementById('saveSettingsButton');
-      const addRowButton = document.getElementById('addRowButton');
-      const resetDefaultsButton = document.getElementById('resetDefaultsButton');
+            // 新增的 DOM 元素緩存
+            const settingsDropdownButton = document.getElementById('settingsDropdownButton');
+            const dropdown = document.querySelector('.dropdown');
+            const styleSwitcherModal = document.getElementById('styleSwitcherModal');
+            const styleOptionsContainer = document.getElementById('styleOptions');
+            const languageModal = document.getElementById('languageModal');
+            const languageSelect = document.getElementById('languageSelect');
+            const editorOptionsModal = document.getElementById('editorOptionsModal');
+            const fontSizeInput = document.getElementById('fontSizeInput');
+            const wordWrapSelect = document.getElementById('wordWrapSelect');
+            const showLineNumbersCheckbox = document.getElementById('showLineNumbersCheckbox');
+            const showMinimapCheckbox = document.getElementById('showMinimapCheckbox');
+            const tabSizeInput = document.getElementById('tabSizeInput');
+            const restoreTemplatesButton = document.getElementById('restoreTemplatesButton');
+            const restoreColorSettingsButton = document.getElementById('restoreColorSettingsButton');
 
-      settingsButton.onclick = function() {
-        settingsModal.style.display = 'flex';
-        renderSettingsUI(loadSettings());
-      }
 
-      closeButton.onclick = function() {
-        settingsModal.style.display = 'none';
-      }
+            // 選單項目
+            const labelColorSettingsOption = document.getElementById('labelColorSettingsOption');
+            const styleSwitcherOption = document.getElementById('styleSwitcherOption');
+            const languageOption = document.getElementById('languageOption');
+            const editorOptionsOption = document.getElementById('editorOptionsOption');
 
-      window.onclick = function(event) {
-        if (event.target == settingsModal) {
-          settingsModal.style.display = 'none';
-        }
-      }
 
-      addRowButton.onclick = addSettingRow;
+            // 預設高亮設定 (新增 name 屬性)
+            const defaultSettings = [
+                { name: 'Verse 標籤', pattern: 'Verse \\d+', color: '#9CDCFE' },
+                { name: 'Chorus 標籤', pattern: 'Chorus', color: '#DCDCAA' },
+                { name: 'Bridge 標籤', pattern: 'Bridge', color: '#CE9178' },
+                { name: 'Intro/Outro 標籤', pattern: 'Intro|Outro', color: '#C586C0' },
+                { name: '英文單字', pattern: '[A-Za-z]+', color: '#4EC9B0' }
+            ];
 
-      resetDefaultsButton.onclick = function() {
-        saveSettings(defaultSettings);
-        applyEditorSettings(defaultSettings);
-        renderSettingsUI(defaultSettings);
-        alert('已回復至預設設定！');
-      };
+            // 預設查找替換模板
+            const defaultTemplates = [
+                { title: '移除多餘空白', description: '移除行末空白及多餘換行', findPattern: '[ \\t]+$\\n|\\n{2,}', replaceWith: '\\n' },
+                { title: '將Tab轉換為4個空白', description: '將所有Tab字符轉換為4個空白', findPattern: '\\t', replaceWith: '    ' },
+                { title: '移除所有括號內容', description: '移除所有 () 或 [] 內的內容，包括括號本身', findPattern: '\\([^)]*\\)|\\[[^\\]]*\\]', replaceWith: '' },
+                { title: '移除中文歌詞中的數字', description: '移除中文歌詞中所有數字', findPattern: '[0-9]', replaceWith: '' }
+            ];
 
-      saveSettingsButton.onclick = function() {
-        const settingsList = document.getElementById('settingsList');
-        const newSettings = [];
-        Array.from(settingsList.children).forEach(item => {
-          const patternInput = item.querySelector('input[type="text"]');
-          const colorInput = item.querySelector('input[type="color"]');
-          if (patternInput && colorInput) {
-            try {
-              new RegExp(patternInput.value);
-              newSettings.push({
-                pattern: patternInput.value,
-                color: colorInput.value
-              });
-            } catch (e) {
-              alert(`無效的正規表達式: ${patternInput.value}`);
+            // 預設風格設定 - 現在只保留黑白兩種，並包含所有5種顏色屬性
+            const defaultStyles = [
+                { name: '極簡黑', accentColor: '#A0AEC0', backgroundColor: '#000000', textColor: '#FFFFFF', uiElementColor: '#1A1A1A', borderColor: '#333333' },
+                { name: '極簡白', accentColor: '#4A5568', backgroundColor: '#FFFFFF', textColor: '#000000', uiElementColor: '#F0F0F0', borderColor: '#CCCCCC' }
+            ];
+
+            // 預設語言設定
+            const defaultLanguage = 'zh-TW';
+            // 預設編輯器選項 (新增行號、迷你地圖、Tab 大小)
+            const defaultEditorOptions = {
+                fontSize: 14,
+                wordWrap: 'off',
+                lineNumbers: 'on', // 'on' | 'off' | 'relative' | 'interval'
+                minimap: { enabled: true },
+                tabSize: 4
+            };
+
+
+            // 從 localStorage 載入數據或使用預設值
+            function loadFromLocalStorage(key, defaultValue) {
+                try {
+                    const storedValue = localStorage.getItem(key);
+                    const parsedValue = storedValue ? JSON.parse(storedValue) : defaultValue;
+
+                    if (key === 'lyricHighlightSettings' && Array.isArray(parsedValue)) {
+                        return parsedValue.map(setting => ({
+                            name: setting.name || setting.pattern,
+                            pattern: setting.pattern,
+                            color: setting.color
+                        }));
+                    }
+                    if (key === 'editorSelectedStyle') {
+                        const defaultRef = defaultValue instanceof Array ? defaultValue[0] : defaultValue;
+                        if (!parsedValue || !parsedValue.accentColor || !parsedValue.backgroundColor || !parsedValue.textColor || !parsedValue.uiElementColor || !parsedValue.borderColor) {
+                            return defaultRef;
+                        }
+                    }
+                    if (key === 'editorMonacoOptions') {
+                        return { ...defaultValue, ...parsedValue };
+                    }
+
+
+                    return parsedValue;
+                } catch (e) {
+                    console.error(`載入 localStorage 鍵 "${key}" 時發生錯誤:`, e);
+                    return defaultValue;
+                }
             }
-          }
-        });
-        saveSettings(newSettings);
-        applyEditorSettings(newSettings);
-        settingsModal.style.display = 'none';
-        alert('設定已儲存並套用！');
-      };
 
-      document.getElementById('copyButton').addEventListener('click', function() {
-        const lyrics = editor.getValue();
-        navigator.clipboard.writeText(lyrics).then(function() {
-          alert('已將內容複製到剪貼簿！');
-        }, function(err) {
-          console.error('無法複製:', err);
-          alert('複製失敗，請手動複製。');
+            // 將數據儲存到 localStorage
+            function saveToLocalStorage(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (e) {
+                    console.error(`儲存 localStorage 鍵 "${key}" 時發生錯誤:`, e);
+                    showNotification(`儲存設定到 localStorage 失敗: ${e.message}`, 'error');
+                    return false;
+                }
+            }
+
+            let currentSettings = loadFromLocalStorage('lyricHighlightSettings', defaultSettings);
+            let currentEditableTemplates = loadFromLocalStorage('findReplaceTemplates', defaultTemplates);
+
+            let currentSelectedStyle = loadFromLocalStorage('editorSelectedStyle', defaultStyles[0]);
+
+            let currentLanguage = loadFromLocalStorage('editorLanguage', defaultLanguage);
+            let currentEditorOptions = loadFromLocalStorage('editorMonacoOptions', defaultEditorOptions);
+
+
+            // 輔助函數：調整顏色亮度 (用於動態生成相關顏色)
+            // hex: #RRGGBB, lum: -100 to 100 (負值變暗，正值變亮)
+            // transparent: 如果為 true，則返回帶透明度的 RGBA
+            function adjustColor(hex, lum, transparent = false) {
+                if (hex.startsWith('rgba')) return hex;
+
+                hex = String(hex).replace(/[^0-9a-f]/gi, '');
+                if (hex.length < 6) {
+                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                }
+                lum = lum / 100;
+                let rgb = '#', c, i;
+                for (i = 0; i < 3; i++) {
+                    c = parseInt(hex.substr(i * 2, 2), 16);
+                    c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+                    rgb += ('00' + c).substr(c.length);
+                }
+                if (transparent) {
+                    const r = parseInt(rgb.substring(1,3), 16);
+                    const g = parseInt(rgb.substring(3,5), 16);
+                    const b = parseInt(rgb.substring(5,7), 16);
+                    return `rgba(${r}, ${g}, ${b}, 0.3)`;
+                }
+                return rgb;
+            }
+
+            // 判斷顏色是否為淺色 (用於主題切換，決定 Monaco base theme)
+            function isLightColor(hex) {
+                if (hex.startsWith('rgba')) {
+                    const parts = hex.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+                    if (parts) {
+                        const r = parseInt(parts[1]);
+                        const g = parseInt(parts[2]);
+                        const b = parseInt(parts[3]);
+                        return (r * 299 + g * 587 + b * 114) / 1000 > 186;
+                    }
+                    return false;
+                }
+                const r = parseInt(hex.substring(1,3), 16);
+                const g = parseInt(hex.substring(3,5), 16);
+                const b = parseInt(hex.substring(5,7), 16);
+                return (r * 299 + g * 587 + b * 114) / 1000 > 186;
+            }
+
+            // Helper to get Monaco's theme colors based on the current style
+            function getMonacoThemeColors(colors) {
+                return {
+                    'editor.background': colors.backgroundColor,
+                    'editor.foreground': colors.textColor,
+                    'editorLineNumber.foreground': adjustColor(colors.textColor, -40),
+                    'editorLineNumber.activeForeground': adjustColor(colors.textColor, -20),
+                    'editor.selectionBackground': adjustColor(colors.accentColor, 30, true),
+                    'editor.inactiveSelectionBackground': adjustColor(colors.backgroundColor, 40),
+                    'editor.findMatchBackground': colors.accentColor,
+                    'editor.findMatchHighlightBackground': adjustColor(colors.accentColor, -20),
+                    'editor.hoverHighlightBackground': adjustColor(colors.backgroundColor, 20),
+                    'editor.rangeHighlightBackground': adjustColor(colors.backgroundColor, 20),
+                    'editorCursor.foreground': colors.textColor,
+                    'editorWhitespace.foreground': adjustColor(colors.backgroundColor, 50),
+                    'editorBracketMatch.background': adjustColor(colors.accentColor, 30, true),
+                    'editorBracketMatch.border': colors.accentColor
+                };
+            }
+
+            // 更新 CSS 變數以套用載入的風格
+            function applyCssVariables(colors) {
+                document.documentElement.style.setProperty('--main-accent-color', colors.accentColor);
+                document.documentElement.style.setProperty('--main-background-color', colors.backgroundColor);
+                document.documentElement.style.setProperty('--main-text-color', colors.textColor);
+                document.documentElement.style.setProperty('--main-ui-element-color', colors.uiElementColor);
+                document.documentElement.style.setProperty('--main-border-color', colors.borderColor);
+
+                document.documentElement.style.setProperty('--button-bg-primary-hover', adjustColor(colors.accentColor, -20));
+                document.documentElement.style.setProperty('--button-bg-secondary-hover', adjustColor(colors.uiElementColor, 20));
+                document.documentElement.style.setProperty('--light-text-secondary', adjustColor(colors.textColor, -40));
+
+                monacoThemeBaseColors = getMonacoThemeColors(colors);
+
+                if (editor) {
+                    applyEditorSettings(loadFromLocalStorage('lyricHighlightSettings', defaultSettings));
+                }
+            }
+
+
+            // 應用編輯器選項
+            function applyEditorOptions(options) {
+                if (editor) {
+                    editor.updateOptions({
+                        fontSize: options.fontSize,
+                        wordWrap: options.wordWrap,
+                        lineNumbers: options.lineNumbers,
+                        minimap: { enabled: options.minimap.enabled },
+                        tabSize: options.tabSize
+                    });
+                }
+            }
+
+
+            // 顯示通知訊息
+            function showNotification(message, type = 'success') {
+                const notificationContainer = document.getElementById('notification-container');
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+
+                notificationContainer.appendChild(notification);
+
+                notification.offsetWidth;
+                notification.classList.add('show');
+
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    notification.addEventListener('transitionend', () => {
+                        notification.remove();
+                    });
+                }, 3000);
+            }
+
+            // 驗證正規表達式是否有效
+            function isValidRegex(pattern) {
+                try {
+                    new RegExp(pattern);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // 監聽模式輸入框，實時驗證
+            patternInput.addEventListener('input', function() {
+                if (!isValidRegex(patternInput.value)) {
+                    patternError.style.display = 'block';
+                    saveSettingButton.disabled = true;
+                } else {
+                    patternError.style.display = 'none';
+                    saveSettingButton.disabled = false;
+                }
+            });
+
+            editTemplateFindInput.addEventListener('input', function() {
+                if (!isValidRegex(editTemplateFindInput.value)) {
+                    editPatternError.style.display = 'block';
+                    saveEditTemplateBtn.disabled = true;
+                } else {
+                    editPatternError.style.display = 'none';
+                    saveEditTemplateBtn.disabled = false;
+                }
+            });
+
+
+            // 渲染標籤顏色設定列表 UI
+            function renderSettingsUI(settingsToRender) {
+                settingsList.innerHTML = '';
+                if (settingsToRender.length === 0) {
+                    const li = document.createElement('li');
+                    li.textContent = '沒有高亮設定。';
+                    li.style.gridTemplateColumns = '1fr';
+                    settingsList.appendChild(li);
+                    return;
+                }
+
+                settingsToRender.forEach((setting, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="setting-info-display">
+                            <span class="name">${setting.name}</span>
+                            <span class="pattern">${setting.pattern}</span>
+                        </div>
+                        <div class="setting-color-box" style="background-color: ${setting.color};"></div>
+                        <div class="setting-actions-row">
+                            <button class="edit-btn" data-index="${index}">編輯</button>
+                        </div>
+                    `;
+                    settingsList.appendChild(li);
+                });
+
+                settingsList.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        const settingToEdit = currentSettings[index];
+
+                        settingsModalTitle.textContent = '編輯標籤顏色';
+                        settingNameInput.value = settingToEdit.name;
+                        patternInput.value = settingToEdit.pattern;
+                        colorInput.value = settingToEdit.color;
+                        saveSettingButton.textContent = '更新設定';
+                        saveSettingButton.dataset.editIndex = index;
+
+                        settingForm.style.display = 'grid';
+                        settingsList.style.display = 'none';
+                        settingsListFooter.style.display = 'none';
+
+                        patternError.style.display = 'none';
+                        saveSettingButton.disabled = false;
+                        deleteSettingButton.style.display = 'inline-block';
+                        deleteSettingButton.dataset.deleteIndex = index;
+                    });
+                });
+            }
+
+            // 渲染模板列表 UI
+            function renderTemplatesUI(templatesToRender) {
+                templatesList.innerHTML = '';
+                if (templatesToRender.length === 0) {
+                    const li = document.createElement('li');
+                    li.textContent = '沒有模板。';
+                    li.style.gridTemplateColumns = '1fr';
+                    templatesList.appendChild(li);
+                    return;
+                }
+
+                templatesToRender.forEach((template, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <input type="checkbox" class="template-checkbox" data-index="${index}">
+                        <div class="template-info-display">
+                            <span class="template-title">${template.title}</span>
+                            ${template.description ? `<span class="template-description">${template.description}</span>` : ''}
+                        </div>
+                        <div class="template-actions-row">
+                            <button class="activate-btn" data-index="${index}">啟用</button>
+                        </div>
+                        <div class="template-actions-row">
+                            <button class="edit-btn" data-index="${index}">編輯</button>
+                        </div>
+                    `;
+                    templatesList.appendChild(li);
+                });
+
+                templatesList.querySelectorAll('.activate-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        const templateToApply = currentEditableTemplates[index];
+                        applyTemplateToEditor(templateToApply);
+                    });
+                });
+
+                templatesList.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        const templateToEdit = currentEditableTemplates[index];
+                        editTemplateTitle.textContent = '編輯模板';
+                        editTemplateNameInput.value = templateToEdit.title;
+                        editTemplateDescInput.value = templateToEdit.description || '';
+                        editTemplateFindInput.value = templateToEdit.findPattern;
+                        editTemplateReplaceInput.value = templateToEdit.replaceWith;
+                        editTemplateModal.dataset.editIndex = index;
+                        editTemplateModal.style.display = 'flex';
+                        editPatternError.style.display = 'none';
+                        saveEditTemplateBtn.disabled = false;
+                    });
+                });
+            }
+
+            // 應用模板到編輯器
+            function applyTemplateToEditor(templateToApply) {
+                if (editor && templateToApply) {
+                    const model = editor.getModel();
+                    if (model) {
+                        try {
+                            const findRegex = new RegExp(templateToApply.findPattern, 'g');
+                            const fullRange = model.getFullModelRange();
+                            editor.executeEdits(null, [{
+                                range: fullRange,
+                                text: model.getValue().replace(findRegex, templateToApply.replaceWith)
+                            }]);
+                            showNotification(`模板 "${templateToApply.title}" 已啟用！`);
+                        } catch (e) {
+                            showNotification(`啟用模板失敗: 無效的正規表達式或替換錯誤。`, 'error');
+                            console.error("啟用模板時發生錯誤:", e);
+                        }
+                    }
+                }
+            }
+
+
+            // 套用編輯器高亮設定
+            function applyEditorSettings(settingsToApply) {
+                if (!monaco) return;
+
+                const themeRules = [];
+                compiledRules = [];
+
+                settingsToApply.forEach((setting, index) => {
+                    try {
+                        const regex = new RegExp(setting.pattern, 'g');
+                        compiledRules.push([regex, `lyric-tag-custom-${index}`]);
+                        themeRules.push({
+                            token: `lyric-tag-custom-${index}`,
+                            foreground: setting.color.substring(1)
+                        });
+                    } catch (e) {
+                        console.warn(`無效的正規表達式模式 "${setting.pattern}" 將被忽略:`, e);
+                    }
+                });
+
+                if (!monaco.languages.getLanguages().some(lang => lang.id === 'lyrics')) {
+                    monaco.languages.register({ id: 'lyrics' });
+                }
+
+                monaco.languages.setMonarchTokensProvider('lyrics', {
+                    tokenizer: {
+                        root: [
+                            ...compiledRules.map(rule => [rule[0], rule[1]]),
+                            [/./, '']
+                        ]
+                    }
+                });
+
+                monaco.editor.defineTheme('lyrics-custom-theme', {
+                    base: isLightColor(currentSelectedStyle.backgroundColor) ? 'vs' : 'vs-dark',
+                    inherit: true,
+                    rules: themeRules,
+                    colors: monacoThemeBaseColors
+                });
+                monaco.editor.setTheme('lyrics-custom-theme');
+
+                if (editor) {
+                    monaco.editor.setModelLanguage(editor.getModel(), 'lyrics');
+                }
+            }
+
+
+            // Monaco Editor 載入完成後初始化編輯器
+            require(['vs/editor/editor.main'], function () {
+                editor = monaco.editor.create(document.getElementById('editor'), {
+                    value: `這是第一段 Verse 1 的內容。
+這裡有一些 English words.
+Chorus
+這是 Verse 2 的內容。
+這裡有 多 個   空格 和   製表符。\t\t
+Bridge.
+第三段。
+Some more English.
+
+Verse 4.`,
+                    language: 'lyrics',
+                    automaticLayout: true
+                });
+
+                applyCssVariables(currentSelectedStyle);
+                applyEditorOptions(currentEditorOptions);
+            });
+
+
+            // --- 事件監聽器 ---
+
+            // 關閉模態框
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const modalId = this.dataset.modal;
+                    document.getElementById(modalId).style.display = 'none';
+                    if (modalId === 'settingsModal') {
+                        settingForm.style.display = 'none';
+                        settingsList.style.display = 'block';
+                        settingsListFooter.style.display = 'flex';
+                        settingForm.reset();
+                        saveSettingButton.textContent = '儲存設定';
+                        delete saveSettingButton.dataset.editIndex;
+                        patternError.style.display = 'none';
+                        saveSettingButton.disabled = false;
+                        deleteSettingButton.style.display = 'none';
+                    } else if (modalId === 'editTemplateModal') {
+                        document.getElementById('editTemplateForm').reset();
+                        editPatternError.style.display = 'none';
+                        saveEditTemplateBtn.disabled = false;
+                    }
+                });
+            });
+
+            // 點擊模態框外部關閉 (不包含下拉選單)
+            window.addEventListener('click', function(event) {
+                if (event.target === settingsModal) {
+                    settingsModal.style.display = 'none';
+                    settingForm.style.display = 'none';
+                    settingsList.style.display = 'block';
+                    settingsListFooter.style.display = 'flex';
+                    settingForm.reset();
+                    saveSettingButton.textContent = '儲存設定';
+                    delete saveSettingButton.dataset.editIndex;
+                    patternError.style.display = 'none';
+                    saveSettingButton.disabled = false;
+                    deleteSettingButton.style.display = 'none';
+                } else if (event.target === templatesModal) {
+                    templatesModal.style.display = 'none';
+                } else if (event.target === helpModal) {
+                    helpModal.style.display = 'none';
+                } else if (event.target === editTemplateModal) {
+                    editTemplateModal.style.display = 'none';
+                    document.getElementById('editTemplateForm').reset();
+                    editPatternError.style.display = 'none';
+                    saveEditTemplateBtn.disabled = false;
+                } else if (event.target === styleSwitcherModal) {
+                    styleSwitcherModal.style.display = 'none';
+                } else if (event.target === languageModal) {
+                    languageModal.style.display = 'none';
+                } else if (event.target === editorOptionsModal) {
+                    editorOptionsModal.style.display = 'none';
+                }
+            });
+
+
+            // 下拉選單顯示/隱藏邏輯
+            settingsDropdownButton.addEventListener('click', function(event) {
+                dropdown.classList.toggle('active');
+                event.stopPropagation();
+            });
+
+            dropdown.addEventListener('click', function(event) {
+                event.stopPropagation();
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+
+            labelColorSettingsOption.onclick = function() {
+                settingsModal.style.display = 'flex';
+                settingsModalTitle.textContent = '標籤顏色設定';
+                settingForm.style.display = 'none';
+                settingsList.style.display = 'block';
+                settingsListFooter.style.display = 'flex';
+                renderSettingsUI(currentSettings);
+                dropdown.classList.remove('active');
+            };
+
+            styleSwitcherOption.onclick = function() {
+                styleSwitcherModal.style.display = 'flex';
+                renderStyleOptions();
+                dropdown.classList.remove('active');
+            };
+
+            languageOption.onclick = function() {
+                languageModal.style.display = 'flex';
+                languageSelect.value = currentLanguage;
+                dropdown.classList.remove('active');
+            };
+
+            editorOptionsOption.onclick = function() {
+                editorOptionsModal.style.display = 'flex';
+                fontSizeInput.value = currentEditorOptions.fontSize;
+                wordWrapSelect.value = currentEditorOptions.wordWrap;
+                showLineNumbersCheckbox.checked = currentEditorOptions.lineNumbers === 'on';
+                showMinimapCheckbox.checked = currentEditorOptions.minimap.enabled;
+                tabSizeInput.value = currentEditorOptions.tabSize;
+                dropdown.classList.remove('active');
+            };
+
+
+            document.getElementById('templatesButton').onclick = function () {
+                templatesModal.style.display = 'flex';
+                renderTemplatesUI(loadFromLocalStorage('findReplaceTemplates', defaultTemplates));
+            };
+
+            document.getElementById('copyButton').addEventListener('click', function () {
+                const lyrics = editor.getValue();
+                navigator.clipboard.writeText(lyrics).then(function () {
+                    showNotification('已將內容複製到剪貼簿！');
+                }, function (err) {
+                    console.error('無法複製:', err);
+                    showNotification('複製失敗，請手動複製。', 'error');
+                });
+            });
+
+            document.getElementById('helpButton').onclick = function () {
+                document.getElementById('helpModal').style.display = 'flex';
+            };
+
+            addNewSettingButton.onclick = function() {
+                settingsModalTitle.textContent = '新增標籤顏色';
+                settingForm.style.display = 'grid';
+                settingsList.style.display = 'none';
+                settingsListFooter.style.display = 'none';
+                settingForm.reset();
+                saveSettingButton.textContent = '新增設定';
+                delete saveSettingButton.dataset.editIndex;
+                patternError.style.display = 'none';
+                saveSettingButton.disabled = false;
+                deleteSettingButton.style.display = 'none';
+            };
+
+            settingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const name = settingNameInput.value.trim();
+                const pattern = patternInput.value;
+                const color = colorInput.value;
+
+                if (!isValidRegex(pattern)) {
+                    patternError.style.display = 'block';
+                    showNotification('請輸入有效的正規表達式！', 'error');
+                    return;
+                }
+
+                const editIndex = saveSettingButton.dataset.editIndex;
+                const newSetting = { name, pattern, color };
+
+                if (editIndex !== undefined) {
+                    currentSettings[parseInt(editIndex)] = newSetting;
+                    showNotification('設定已更新！');
+                } else {
+                    currentSettings.push(newSetting);
+                    showNotification('新設定已新增！');
+                }
+
+                saveToLocalStorage('lyricHighlightSettings', currentSettings);
+                applyEditorSettings(currentSettings);
+
+                settingsModalTitle.textContent = '標籤顏色設定';
+                settingForm.style.display = 'none';
+                settingsList.style.display = 'block';
+                settingsListFooter.style.display = 'flex';
+                renderSettingsUI(currentSettings);
+
+                settingForm.reset();
+                saveSettingButton.textContent = '儲存設定';
+                delete saveSettingButton.dataset.editIndex;
+                patternError.style.display = 'none';
+                saveSettingButton.disabled = false;
+                deleteSettingButton.style.display = 'none';
+            });
+
+            cancelSettingEdit.onclick = function() {
+                settingsModalTitle.textContent = '標籤顏色設定';
+                settingForm.style.display = 'none';
+                settingsList.style.display = 'block';
+                settingsListFooter.style.display = 'flex';
+                settingForm.reset();
+                saveSettingButton.textContent = '儲存設定';
+                delete saveSettingButton.dataset.editIndex;
+                patternError.style.display = 'none';
+                saveSettingButton.disabled = false;
+                deleteSettingButton.style.display = 'none';
+            };
+
+            deleteSettingButton.onclick = function() {
+                const indexToDelete = parseInt(deleteSettingButton.dataset.deleteIndex);
+                if (confirm('確定要刪除此設定嗎？')) {
+                    currentSettings.splice(indexToDelete, 1);
+                    saveToLocalStorage('lyricHighlightSettings', currentSettings);
+                    applyEditorSettings(currentSettings);
+                    showNotification('設定已刪除！');
+
+                    settingsModalTitle.textContent = '標籤顏色設定';
+                    settingForm.style.display = 'none';
+                    settingsList.style.display = 'block';
+                    settingsListFooter.style.display = 'flex';
+                    renderSettingsUI(currentSettings);
+                    settingForm.reset();
+                    deleteSettingButton.style.display = 'none';
+                }
+            };
+
+
+            addNewTemplateButton.onclick = function () {
+                editTemplateTitle.textContent = '新增模板';
+                document.getElementById('editTemplateForm').reset();
+                editTemplateModal.dataset.editIndex = -1;
+                editTemplateModal.style.display = 'flex';
+                editPatternError.style.display = 'none';
+                saveEditTemplateBtn.disabled = false;
+            };
+
+            document.getElementById('cancelEditTemplate').onclick = function () {
+                editTemplateModal.style.display = 'none';
+            };
+
+            saveEditTemplateBtn.onclick = function () {
+                const name = editTemplateNameInput.value.trim();
+                const desc = editTemplateDescInput.value.trim();
+                const find = editTemplateFindInput.value;
+                const replace = editTemplateReplaceInput.value;
+
+                if (!name || !find || !isValidRegex(find)) {
+                    showNotification('模板名稱和尋找模式為必填項，且尋找模式必須是有效的正規表達式！', 'error');
+                    return;
+                }
+
+                const editIndex = parseInt(editTemplateModal.dataset.editIndex);
+                const template = { title: name, description: desc, findPattern: find, replaceWith: replace };
+
+                if (editIndex === -1) {
+                    currentEditableTemplates.push(template);
+                } else {
+                    currentEditableTemplates[editIndex] = template;
+                }
+
+                renderTemplatesUI(currentEditableTemplates);
+                saveToLocalStorage('findReplaceTemplates', currentEditableTemplates);
+                editTemplateModal.style.display = 'none';
+                showNotification(editIndex === -1 ? '模板已新增！' : '模板已更新！');
+            };
+
+            activateSelectedTemplates.onclick = function() {
+                const checkboxes = templatesList.querySelectorAll('.template-checkbox:checked');
+                if (checkboxes.length === 0) {
+                    showNotification('請先選擇至少一個模板！', 'error');
+                    return;
+                }
+
+                const selectedIndices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
+                selectedIndices.sort((a, b) => a - b);
+
+                selectedIndices.forEach(index => {
+                    const templateToApply = currentEditableTemplates[index];
+                    if (templateToApply) {
+                        applyTemplateToEditor(templateToApply);
+                    }
+                });
+                checkboxes.forEach(cb => cb.checked = false);
+                showNotification(`已啟用 ${selectedIndices.length} 個選取項目！`);
+            };
+
+
+            // --- 風格切換 Modal 邏輯 ---
+            function renderStyleOptions() {
+                styleOptionsContainer.innerHTML = '';
+                defaultStyles.forEach(style => {
+                    const div = document.createElement('div');
+                    div.className = 'style-option';
+                    if (currentSelectedStyle.name === style.name) {
+                        div.classList.add('selected');
+                    }
+                    div.dataset.styleName = style.name;
+
+                    div.dataset.accentColor = style.accentColor;
+                    div.dataset.backgroundColor = style.backgroundColor;
+                    div.dataset.textColor = style.textColor;
+                    div.dataset.uiElementColor = style.uiElementColor;
+                    div.dataset.borderColor = style.borderColor;
+
+
+                    div.innerHTML = `
+                        <div class="color-box" style="background-color: ${style.accentColor};"></div>
+                        <span class="style-option-label">${style.name}</span>
+                    `;
+
+                    div.onclick = function() {
+                        styleOptionsContainer.querySelectorAll('.style-option').forEach(item => {
+                            item.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+
+                        currentSelectedStyle = {
+                            name: this.dataset.styleName,
+                            accentColor: this.dataset.accentColor,
+                            backgroundColor: this.dataset.backgroundColor,
+                            textColor: this.dataset.textColor,
+                            uiElementColor: this.dataset.uiElementColor,
+                            borderColor: this.dataset.borderColor
+                        };
+
+                        if (saveToLocalStorage('editorSelectedStyle', currentSelectedStyle)) {
+                            applyCssVariables(currentSelectedStyle);
+                            showNotification('風格已套用！');
+                        }
+                    };
+                    styleOptionsContainer.appendChild(div);
+                });
+            }
+
+            // --- 語言 Modal 邏輯 ---
+            document.getElementById('saveLanguageButton').onclick = function() {
+                const selectedLang = languageSelect.value;
+                if (saveToLocalStorage('editorLanguage', selectedLang)) {
+                    currentLanguage = selectedLang;
+                    languageModal.style.display = 'none';
+                    showNotification(`語言已設定為 ${selectedLang === 'zh-TW' ? '繁體中文' : 'English'}！`);
+                }
+            };
+
+            // --- 編輯器選項 Modal 邏輯 ---
+            document.getElementById('saveEditorOptionsButton').onclick = function() {
+                const newFontSize = parseInt(fontSizeInput.value);
+                const newWordWrap = wordWrapSelect.value;
+                const newShowLineNumbers = showLineNumbersCheckbox.checked ? 'on' : 'off';
+                const newShowMinimap = showMinimapCheckbox.checked;
+                const newTabSize = parseInt(tabSizeInput.value);
+
+                if (isNaN(newFontSize) || newFontSize < 8 || newFontSize > 72) {
+                    showNotification('字體大小必須是 8 到 72 之間的數字！', 'error');
+                    return;
+                }
+                if (isNaN(newTabSize) || newTabSize < 1 || newTabSize > 8) {
+                    showNotification('Tab 鍵大小必須是 1 到 8 之間的數字！', 'error');
+                    return;
+                }
+
+                currentEditorOptions = {
+                    fontSize: newFontSize,
+                    wordWrap: newWordWrap,
+                    lineNumbers: newShowLineNumbers,
+                    minimap: { enabled: newShowMinimap },
+                    tabSize: newTabSize
+                };
+
+                if (saveToLocalStorage('editorMonacoOptions', currentEditorOptions)) {
+                    applyEditorOptions(currentEditorOptions);
+                    editorOptionsModal.style.display = 'none';
+                    showNotification('編輯器選項已儲存並套用！');
+                }
+            };
+
+            // 恢復模板預設按鈕功能
+            restoreTemplatesButton.onclick = function() {
+                if (confirm('確定要恢復所有模板為預設值嗎？這將會覆蓋您的所有自訂模板。')) {
+                    currentEditableTemplates = JSON.parse(JSON.stringify(defaultTemplates));
+                    if (saveToLocalStorage('findReplaceTemplates', currentEditableTemplates)) {
+                        renderTemplatesUI(currentEditableTemplates);
+                        showNotification('模板已恢復為預設值！');
+                    }
+                }
+            };
+
+            // 恢復顏色設定預設按鈕功能
+            restoreColorSettingsButton.onclick = function() {
+                if (confirm('確定要恢復所有顏色設定為預設值嗎？這將會覆蓋您的所有自訂顏色設定。')) {
+                    currentSettings = JSON.parse(JSON.stringify(defaultSettings));
+                    if (saveToLocalStorage('lyricHighlightSettings', currentSettings)) {
+                        applyEditorSettings(currentSettings);
+                        renderSettingsUI(currentSettings);
+                        showNotification('顏色設定已恢復為預設值！');
+                    }
+                }
+            };
+
         });
-      });
-    });
-  </script>
+    </script>
 </body>
 </html>
